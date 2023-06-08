@@ -204,18 +204,18 @@ def _save_pae_json_file(
     f.write(pae_json)
 
 
-def predict_unrelaxed_structure(
-    fasta_path: str,
-    fasta_name: str,
-    output_dir_base: str,
-    data_pipeline: Union[pipeline.DataPipeline, pipeline_multimer.DataPipeline],
-#     model_runners: Dict[str, model.RunModel],
-    model_name: str,
-    model_runner: model.RunModel,
-    amber_relaxer: relax.AmberRelaxation,
-    benchmark: bool,
-    random_seed: int,
-    models_to_relax: ModelsToRelax):
+def get_features(
+                  fasta_path: str,
+                  fasta_name: str,
+                  output_dir_base: str,
+                  data_pipeline: Union[pipeline.DataPipeline, pipeline_multimer.DataPipeline],
+              #     model_runners: Dict[str, model.RunModel],
+                  model_name: str,
+                  model_runner: model.RunModel,
+                  amber_relaxer: relax.AmberRelaxation,
+                  benchmark: bool,
+                  random_seed: int,
+                  models_to_relax: ModelsToRelax):
   """Predicts structure using AlphaFold for the given sequence."""
   logging.info('Predicting %s', fasta_name)
   timings = {}
@@ -226,18 +226,37 @@ def predict_unrelaxed_structure(
   if not os.path.exists(msa_output_dir):
     os.makedirs(msa_output_dir)
 
-  # Get features.
-  t_0 = time.time()
-  feature_dict = data_pipeline.process(
-      input_fasta_path=fasta_path,
-      msa_output_dir=msa_output_dir)
-  timings['features'] = time.time() - t_0
-
-  # Write out features as a pickled dictionary.
+  # MODIFIED Write/READ out features as a pickled dictionary.
   features_output_path = os.path.join(output_dir, 'features.pkl')
-  with open(features_output_path, 'wb') as f:
-    pickle.dump(feature_dict, f, protocol=4)
+  if not os.path.isfile(features_output_path):
+    # Get features.
+    t_0 = time.time()
+    feature_dict = data_pipeline.process(
+        input_fasta_path=fasta_path,
+        msa_output_dir=msa_output_dir)
+    timings['features'] = time.time() - t_0
+  
+    with open(features_output_path, 'wb') as f:
+      pickle.dump(feature_dict, f, protocol=4)
 
+  else:
+    with open(features_output_path, 'rb') as f:
+      pickle.load(f, protocol=4)
+    timings['features'] = 0.
+  return timings
+    
+def predict_unrelaxed_structures(fasta_path: str,
+                                fasta_name: str,
+                                output_dir_base: str,
+                                data_pipeline: Union[pipeline.DataPipeline, pipeline_multimer.DataPipeline],
+                            #     model_runners: Dict[str, model.RunModel],
+                                model_name: str,
+                                model_runner: model.RunModel,
+                                amber_relaxer: relax.AmberRelaxation,
+                                benchmark: bool,
+                                random_seed: int,
+                                models_to_relax: ModelsToRelax,
+                                timings: dict):
   unrelaxed_pdbs = {}
   unrelaxed_proteins = {}
   relaxed_pdbs = {}
