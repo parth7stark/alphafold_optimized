@@ -42,6 +42,7 @@ from alphafold.relax import relax
 import jax.numpy as jnp
 import numpy as np
 
+import ray
 # Internal import (7716).
 
 logging.set_verbosity(logging.INFO)
@@ -224,18 +225,27 @@ def predict_structure(
   if not os.path.exists(msa_output_dir):
     os.makedirs(msa_output_dir)
 
-  # Get features.
+
+  # Get features. https://github.com/Zuricho/ParallelFold/blob/main/run_alphafold.py
   t_0 = time.time()
-  feature_dict = data_pipeline.process(
-      input_fasta_path=fasta_path,
-      msa_output_dir=msa_output_dir)
-  timings['features'] = time.time() - t_0
+  features_output_path = os.path.join(output_dir, 'features.pkl')
+  
+  # If we already have feature.pkl file, skip the MSA and template finding step
+  if os.path.exists(features_output_path):
+    feature_dict = pickle.load(open(features_output_path, 'rb'))
+  
+  else:
+    feature_dict = data_pipeline.process(
+        input_fasta_path=fasta_path,
+        msa_output_dir=msa_output_dir)
 
   # Write out features as a pickled dictionary.
   features_output_path = os.path.join(output_dir, 'features.pkl')
   with open(features_output_path, 'wb') as f:
     pickle.dump(feature_dict, f, protocol=4)
 
+  timings['features'] = time.time() - t_0
+    
   unrelaxed_pdbs = {}
   unrelaxed_proteins = {}
   relaxed_pdbs = {}
