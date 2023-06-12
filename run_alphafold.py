@@ -510,16 +510,17 @@ def main(argv):
   # Predict structure for each of the sequences.
   for i, fasta_path in enumerate(FLAGS.fasta_paths):
     fasta_name = fasta_names[i]
-    predict_structure(
-        fasta_path=fasta_path,
-        fasta_name=fasta_name,
-        output_dir_base=FLAGS.output_dir,
-        data_pipeline=data_pipeline,
-        model_runners=model_runners,
-        amber_relaxer=amber_relaxer,
-        benchmark=FLAGS.benchmark,
-        random_seed=random_seed,
-        models_to_relax=FLAGS.models_to_relax)
+    timings, unrelaxed_proteins, unrelaxed_pdbs, ranking_confidences = predict_structure(
+                                                                                        fasta_path=fasta_path,
+                                                                                        fasta_name=fasta_name,
+                                                                                        output_dir_base=FLAGS.output_dir,
+                                                                                        data_pipeline=data_pipeline,
+                                                                                        model_runners=model_runners,
+                                                                                        amber_relaxer=amber_relaxer,
+                                                                                        benchmark=FLAGS.benchmark,
+                                                                                        random_seed=random_seed,
+                                                                                        models_to_relax=FLAGS.models_to_relax)
+    
 
 
 if __name__ == '__main__':
