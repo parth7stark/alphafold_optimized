@@ -43,6 +43,7 @@ import jax.numpy as jnp
 import numpy as np
 
 import ray
+import itertools
 # Internal import (7716).
 
 logging.set_verbosity(logging.INFO)
@@ -204,6 +205,9 @@ def _save_pae_json_file(
   with open(pae_json_output_path, 'w') as f:
     f.write(pae_json)
 
+def collate_dictionary(dic0, dic1):
+  dic0.update(dic1)
+  return dic0
 
 def predict_structure(
     fasta_path: str,
@@ -254,8 +258,13 @@ def predict_structure(
 
   # Run the models.
   num_models = len(model_runners)
-  for model_index, (model_name, model_runner) in enumerate(
-      model_runners.items()):
+  num_gpus = jax.local_device_count()
+  
+  @ray.remote(num_gpus=1/num_gpus)
+  def predict_one_structure(
+                            model_index :int,
+                            model_name: str, 
+                            model_runner: model.RunModel):
     logging.info('Running model %s on %s', model_name, fasta_name)
     t_0 = time.time()
     model_random_seed = model_index + random_seed * num_models
@@ -317,6 +326,15 @@ def predict_structure(
     unrelaxed_pdb_path = os.path.join(output_dir, f'unrelaxed_{model_name}.pdb')
     with open(unrelaxed_pdb_path, 'w') as f:
       f.write(unrelaxed_pdbs[model_name])
+      
+    return timings, unrelaxed_proteins, unrelaxed_pdbs, ranking_confidences
+
+  outputs = [predict_one_structure.remote(model_index, model_name, model_runner) for model_index, (model_name, model_runner) in enumerate(model_runners.item())]    
+  outputs = ray.get(outputs) #->List[tuple(dict)]
+  outputs = list(zip(*outputs)) #->[(dic0, dic0...), (dic1, dic1...), ...]
+  assert len(outputs) == 4, "There should be only four tuples ready..."
+  timings, unrelaxed_proteins, unrelaxed_pdbs, ranking_confidences = [itertools.reduce(ranking_confidences, out) for out in outputs] #->List[dict]
+  return timings, unrelaxed_proteins, unrelaxed_pdbs, ranking_confidences
 
   # Rank by model confidence.
   ranked_order = [
