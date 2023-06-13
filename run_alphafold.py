@@ -335,7 +335,22 @@ def predict_structure(
   assert len(outputs) == 4, "There should be only four tuples ready..."
   timings, unrelaxed_proteins, unrelaxed_pdbs, ranking_confidences = [itertools.reduce(ranking_confidences, out) for out in outputs] #->List[dict]
   return timings, unrelaxed_proteins, unrelaxed_pdbs, ranking_confidences
-
+  
+def structure_ranker( fasta_path: str,
+                      fasta_name: str,
+                      output_dir_base: str,
+                      data_pipeline: Union[pipeline.DataPipeline, pipeline_multimer.DataPipeline],
+                      model_runners: Dict[str, model.RunModel],
+                      amber_relaxer: relax.AmberRelaxation,
+                      benchmark: bool,
+                      random_seed: int,
+                      models_to_relax: ModelsToRelax,
+                      timings: dict, 
+                      unrelaxed_proteins :dict, 
+                      unrelaxed_pdbs: dict, 
+                      ranking_confidences: dict):
+  relaxed_pdbs = {}
+  relax_metrics = {}
   # Rank by model confidence.
   ranked_order = [
       model_name for model_name, confidence in
