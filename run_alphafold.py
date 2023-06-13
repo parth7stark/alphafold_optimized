@@ -593,30 +593,42 @@ def main(argv):
   logging.info('Using random seed %d for the data pipeline', random_seed)
 
   # Predict structure for each of the sequences.
-  for i, fasta_path in enumerate(FLAGS.fasta_paths):
-    fasta_name = fasta_names[i]
-    timings, unrelaxed_proteins, unrelaxed_pdbs, ranking_confidences = predict_structure(
-                                                                                        fasta_path=fasta_path,
-                                                                                        fasta_name=fasta_name,
-                                                                                        output_dir_base=FLAGS.output_dir,
-                                                                                        data_pipeline=data_pipeline,
-                                                                                        model_runners=model_runners,
-                                                                                        amber_relaxer=amber_relaxer,
-                                                                                        benchmark=FLAGS.benchmark,
-                                                                                        random_seed=random_seed,
-                                                                                        models_to_relax=FLAGS.models_to_relax)
-    structure_ranker( model_runners=model_runners,
-                      random_seed=random_seed,
-                      output_dir_base=output_dir_base,
-                      fasta_name=fasta_name,
-                      amber_relaxer=amber_relaxer,
-                      models_to_relax=FLAGS.models_to_relax,
-                      timings=timings, 
-                      unrelaxed_proteins=unrelaxed_proteins, 
-                      unrelaxed_pdbs=unrelaxed_pdbs, 
-                      ranking_confidences=ranking_confidences,
-                      continued_simulation=FLAGS.continued_simulation)
-    
+  if FLAGS.continued_simulation:
+    for i, fasta_path in enumerate(FLAGS.fasta_paths):
+      fasta_name = fasta_names[i]
+      timings, unrelaxed_proteins, unrelaxed_pdbs, ranking_confidences = predict_structure(
+                                                                                          fasta_path=fasta_path,
+                                                                                          fasta_name=fasta_name,
+                                                                                          output_dir_base=FLAGS.output_dir,
+                                                                                          data_pipeline=data_pipeline,
+                                                                                          model_runners=model_runners,
+                                                                                          amber_relaxer=amber_relaxer,
+                                                                                          benchmark=FLAGS.benchmark,
+                                                                                          random_seed=random_seed,
+                                                                                          models_to_relax=FLAGS.models_to_relax)
+      structure_ranker( model_runners=model_runners,
+                        random_seed=random_seed,
+                        output_dir_base=output_dir_base,
+                        fasta_name=fasta_name,
+                        amber_relaxer=amber_relaxer,
+                        models_to_relax=FLAGS.models_to_relax,
+                        timings=timings, 
+                        unrelaxed_proteins=unrelaxed_proteins, 
+                        unrelaxed_pdbs=unrelaxed_pdbs, 
+                        ranking_confidences=ranking_confidences,
+                        continued_simulation=FLAGS.continued_simulation)
+  else:  
+      structure_ranker( model_runners=model_runners,
+                        random_seed=random_seed,
+                        output_dir_base=output_dir_base,
+                        fasta_name=fasta_name,
+                        amber_relaxer=amber_relaxer,
+                        models_to_relax=FLAGS.models_to_relax,
+                        timings=timings, 
+                        unrelaxed_proteins=unrelaxed_proteins, 
+                        unrelaxed_pdbs=unrelaxed_pdbs, 
+                        ranking_confidences=ranking_confidences,
+                        continued_simulation=FLAGS.continued_simulation)
 
 if __name__ == '__main__':
   flags.mark_flags_as_required([
