@@ -173,6 +173,14 @@ def _jnp_to_np(output: Dict[str, Any]) -> Dict[str, Any]:
       output[k] = np.array(v)
   return output
 
+def _np_to_jnp(output: Dict[str, Any]) -> Dict[str, Any]:
+  """Recursively changes numpy arrays to jax arrays."""
+  for k, v in output.items():
+    if isinstance(v, dict):
+      output[k] = _np_to_jnp(v)
+    elif isinstance(v, np.ndarray):
+      output[k] = jnp.array(v)
+  return output
 
 def _save_confidence_json_file(
     plddt: np.ndarray, output_dir: str, model_name: str
@@ -186,7 +194,18 @@ def _save_confidence_json_file(
   with open(confidence_json_output_path, 'w') as f:
     f.write(confidence_json)
 
+def _load_confidence_json_file(
+    output_dir: str, model_name: str
+) -> None:
+  # Save the confidence json.
+  confidence_json_output_path = os.path.join(
+      output_dir, f'confidence_{model_name}.json'
+  )
 
+  with open(confidence_json_output_path, 'r') as f:
+    confidence_json = json.load(f)
+  return confidence_json
+    
 def _save_pae_json_file(
     pae: np.ndarray, max_pae: float, output_dir: str, model_name: str
 ) -> None:
@@ -205,6 +224,22 @@ def _save_pae_json_file(
   with open(pae_json_output_path, 'w') as f:
     f.write(pae_json)
 
+def _load_pae_json_file(
+    output_dir: str, model_name: str
+) -> None:
+  """Check prediction result for PAE data and save to a JSON file if present.
+
+  Args:
+    output_dir: Directory to which files are saved.
+    model_name: Name of a model.
+  """
+
+  # Save the PAE json.
+  pae_json_output_path = os.path.join(output_dir, f'pae_{model_name}.json')
+  with open(pae_json_output_path, 'r') as f:
+    pae_json = json.load(f)    
+  return pae_json
+    
 def collate_dictionary(dic0, dic1):
   dic0.update(dic1)
   return dic0
@@ -338,13 +373,36 @@ def predict_structure(
   timings, unrelaxed_proteins, unrelaxed_pdbs, ranking_confidences = [itertools.reduce(ranking_confidences, out) for out in outputs] #->List[dict]
   return timings, unrelaxed_proteins, unrelaxed_pdbs, ranking_confidences
   
-def structure_ranker( fasta_name: str,
+def structure_ranker( model_index :int,
+                      model_name: str, 
+                      model_runner: model.RunModel,
+                      fasta_name: str,
                       amber_relaxer: relax.AmberRelaxation,
                       models_to_relax: ModelsToRelax,
                       timings: dict, 
                       unrelaxed_proteins :dict, 
                       unrelaxed_pdbs: dict, 
-                      ranking_confidences: dict):
+                      ranking_confidences: dict, 
+                      continued_simulation: bool):
+  
+  if not continued_simulation:
+    # Save the model outputs.
+    result_output_path = os.path.join(output_dir, f'result_{model_name}.pkl')
+    with open(result_output_path, 'wb') as f:
+      pickle.dump(np_prediction_result, f, protocol=4)
+      
+    _save_confidence_json_file(plddt, output_dir, model_name)
+    model_random_seed = model_index + random_seed * num_models
+    processed_feature_dict = model_runner.process_features(
+        feature_dict, random_seed=model_random_seed)
+    unrelaxed_protein = protein.from_prediction(
+        features=processed_feature_dict,
+        result=prediction_result,
+        b_factors=plddt_b_factors,
+        remove_leading_feature_dimension=not model_runner.multimer_mode)
+    plddt_b_factors = np.repeat(
+        plddt[:, None], residue_constants.atom_type_num, axis=-1)
+    
   relaxed_pdbs = {}
   relax_metrics = {}
   # Rank by model confidence.
@@ -531,13 +589,15 @@ def main(argv):
                                                                                         benchmark=FLAGS.benchmark,
                                                                                         random_seed=random_seed,
                                                                                         models_to_relax=FLAGS.models_to_relax)
-    structure_ranker( fasta_name=fasta_name,
+    structure_ranker( model_runner=model_runner,
+                      fasta_name=fasta_name,
                       amber_relaxer=amber_relaxer,
                       models_to_relax=FLAGS.models_to_relax,
                       timings=timings, 
                       unrelaxed_proteins=unrelaxed_proteins, 
                       unrelaxed_pdbs=unrelaxed_pdbs, 
-                      ranking_confidences=ranking_confidences)
+                      ranking_confidences=ranking_confidences,
+                      continued_simulation=True)
     
 
 
