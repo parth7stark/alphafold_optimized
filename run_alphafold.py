@@ -144,6 +144,7 @@ flags.DEFINE_boolean('use_gpu_relax', None, 'Whether to relax on GPU. '
                      'Relax on GPU can be much faster than CPU, so it is '
                      'recommended to enable if possible. GPUs must be available'
                      ' if this setting is enabled.')
+flags.DEFINE_boolean('continued_simulation', None, 'Whether to use MD only..')
 
 FLAGS = flags.FLAGS
 
@@ -614,7 +615,7 @@ def main(argv):
                       unrelaxed_proteins=unrelaxed_proteins, 
                       unrelaxed_pdbs=unrelaxed_pdbs, 
                       ranking_confidences=ranking_confidences,
-                      continued_simulation=True)
+                      continued_simulation=FLAGS.continued_simulation)
     
 
 if __name__ == '__main__':
