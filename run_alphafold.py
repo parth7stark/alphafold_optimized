@@ -533,7 +533,6 @@ def main(argv):
                                                                                         models_to_relax=FLAGS.models_to_relax)
     structure_ranker( fasta_name=fasta_name,
                       amber_relaxer=amber_relaxer,
-                      benchmark=FLAGS.benchmark,
                       models_to_relax=FLAGS.models_to_relax,
                       timings=timings, 
                       unrelaxed_proteins=unrelaxed_proteins, 
