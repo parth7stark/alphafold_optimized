@@ -373,9 +373,9 @@ def predict_structure(
   timings, unrelaxed_proteins, unrelaxed_pdbs, ranking_confidences = [itertools.reduce(ranking_confidences, out) for out in outputs] #->List[dict]
   return timings, unrelaxed_proteins, unrelaxed_pdbs, ranking_confidences
   
-def structure_ranker( model_index :int,
-                      model_name: str, 
-                      model_runner: model.RunModel,
+def structure_ranker( model_runners: Dict[str, model.RunModel],
+                      random_seed: int,
+                      output_dir_base: str,
                       fasta_name: str,
                       amber_relaxer: relax.AmberRelaxation,
                       models_to_relax: ModelsToRelax,
@@ -385,23 +385,38 @@ def structure_ranker( model_index :int,
                       ranking_confidences: dict, 
                       continued_simulation: bool):
   
+  output_dir = os.path.join(output_dir_base, fasta_name)
+  features_output_path = os.path.join(output_dir, 'features.pkl')
+  feature_dict = pickle.load(open(features_output_path, 'rb'))
+  num_models = len(model_runners)
+
   if not continued_simulation:
     # Save the model outputs.
-    result_output_path = os.path.join(output_dir, f'result_{model_name}.pkl')
-    with open(result_output_path, 'wb') as f:
-      pickle.dump(np_prediction_result, f, protocol=4)
+    for model_index, (model_name, model_runner) in enumerate(model_runners):
+      model_random_seed = model_index + random_seed * num_models
+  
+      # If we already have feature.pkl file, skip the MSA and template finding step
+#       if os.path.exists(features_output_path):
+      processed_feature_dict = model_runner.process_features(
+          feature_dict, random_seed=model_random_seed)
       
-    _save_confidence_json_file(plddt, output_dir, model_name)
-    model_random_seed = model_index + random_seed * num_models
-    processed_feature_dict = model_runner.process_features(
-        feature_dict, random_seed=model_random_seed)
-    unrelaxed_protein = protein.from_prediction(
-        features=processed_feature_dict,
-        result=prediction_result,
-        b_factors=plddt_b_factors,
-        remove_leading_feature_dimension=not model_runner.multimer_mode)
-    plddt_b_factors = np.repeat(
-        plddt[:, None], residue_constants.atom_type_num, axis=-1)
+      result_output_path = os.path.join(output_dir, f'result_{model_name}.pkl')
+      
+      with open(result_output_path, 'rb') as f:
+        np_prediction_result = pickle.load(f)
+      prediction_result = _np_to_jnp(dict(np_prediction_result))
+
+      plddt = _load_confidence_json_file(output_dir, model_name)
+      plddt_b_factors = np.repeat(
+          plddt[:, None], residue_constants.atom_type_num, axis=-1)
+
+      unrelaxed_protein = protein.from_prediction(
+          features=processed_feature_dict,
+          result=prediction_result,
+          b_factors=plddt_b_factors,
+          remove_leading_feature_dimension=not model_runner.multimer_mode)
+
+      unrelaxed_proteins[model_name] = unrelaxed_protein
     
   relaxed_pdbs = {}
   relax_metrics = {}
@@ -589,7 +604,9 @@ def main(argv):
                                                                                         benchmark=FLAGS.benchmark,
                                                                                         random_seed=random_seed,
                                                                                         models_to_relax=FLAGS.models_to_relax)
-    structure_ranker( model_runner=model_runner,
+    structure_ranker( model_runners=model_runners,
+                      random_seed=random_seed,
+                      output_dir_base=output_dir_base,
                       fasta_name=fasta_name,
                       amber_relaxer=amber_relaxer,
                       models_to_relax=FLAGS.models_to_relax,
@@ -599,7 +616,6 @@ def main(argv):
                       ranking_confidences=ranking_confidences,
                       continued_simulation=True)
     
-
 
 if __name__ == '__main__':
   flags.mark_flags_as_required([
