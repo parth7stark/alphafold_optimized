@@ -407,7 +407,8 @@ def structure_ranker( model_runners: Dict[str, model.RunModel],
         np_prediction_result = pickle.load(f)
       prediction_result = _np_to_jnp(dict(np_prediction_result))
 
-      plddt = _load_confidence_json_file(output_dir, model_name)
+#       plddt = _load_confidence_json_file(output_dir, model_name)
+      plddt = prediction_result['plddt']
       plddt_b_factors = np.repeat(
           plddt[:, None], residue_constants.atom_type_num, axis=-1)
 
