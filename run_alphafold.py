@@ -642,6 +642,7 @@ if __name__ == '__main__':
       'max_template_date',
       'obsolete_pdbs_path',
       'use_gpu_relax',
+      'continued_simulation'
   ])
 
   app.run(main)
