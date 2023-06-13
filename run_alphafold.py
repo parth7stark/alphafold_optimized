@@ -331,6 +331,8 @@ def predict_structure(
 
   outputs = [predict_one_structure.remote(model_index, model_name, model_runner) for model_index, (model_name, model_runner) in enumerate(model_runners.item())]    
   outputs = ray.get(outputs) #->List[tuple(dict)]
+  ray.shutdown()
+  
   outputs = list(zip(*outputs)) #->[(dic0, dic0...), (dic1, dic1...), ...]
   assert len(outputs) == 4, "There should be only four tuples ready..."
   timings, unrelaxed_proteins, unrelaxed_pdbs, ranking_confidences = [itertools.reduce(ranking_confidences, out) for out in outputs] #->List[dict]
@@ -535,6 +537,19 @@ def main(argv):
                                                                                         benchmark=FLAGS.benchmark,
                                                                                         random_seed=random_seed,
                                                                                         models_to_relax=FLAGS.models_to_relax)
+    structure_ranker( fasta_path=fasta_path,
+                      fasta_name=fasta_name,
+                      output_dir_base=FLAGS.output_dir,
+                      data_pipeline=data_pipeline,
+                      model_runners=model_runners,
+                      amber_relaxer=amber_relaxer,
+                      benchmark=FLAGS.benchmark,
+                      random_seed=random_seed,
+                      models_to_relax=FLAGS.models_to_relax,
+                      timings=timings, 
+                      unrelaxed_proteins=unrelaxed_proteins, 
+                      unrelaxed_pdbs=unrelaxed_pdbs, 
+                      ranking_confidences=ranking_confidences)
     
 
 
