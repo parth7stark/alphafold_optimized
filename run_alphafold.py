@@ -394,6 +394,7 @@ def structure_ranker( model_runners: Dict[str, model.RunModel],
   num_models = len(model_runners)
 
   if not continued_simulation:
+    logging.info('Independently running (an) MD simulation(s) by setting continued_simulation false option...')
     # Save the model outputs.
     for model_index, (model_name, model_runner) in enumerate(model_runners.items()):
       model_random_seed = model_index + random_seed * num_models
