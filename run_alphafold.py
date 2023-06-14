@@ -41,6 +41,7 @@ from alphafold.model import model
 from alphafold.relax import relax
 import jax.numpy as jnp
 import numpy as np
+import jax
 
 import ray
 import itertools
