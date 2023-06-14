@@ -366,7 +366,7 @@ def predict_structure(
       
     return timings, unrelaxed_proteins, unrelaxed_pdbs, ranking_confidences
 
-  outputs = [predict_one_structure.remote(model_index, model_name, model_runner) for model_index, (model_name, model_runner) in enumerate(model_runners.item())]    
+  outputs = [predict_one_structure.remote(model_index, model_name, model_runner) for model_index, (model_name, model_runner) in enumerate(model_runners.items())]    
   outputs = ray.get(outputs) #->List[tuple(dict)]
   ray.shutdown()
   
