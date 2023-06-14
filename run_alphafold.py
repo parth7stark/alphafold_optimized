@@ -394,7 +394,7 @@ def structure_ranker( model_runners: Dict[str, model.RunModel],
 
   if not continued_simulation:
     # Save the model outputs.
-    for model_index, (model_name, model_runner) in enumerate(model_runners):
+    for model_index, (model_name, model_runner) in enumerate(model_runners.items()):
       model_random_seed = model_index + random_seed * num_models
   
       # If we already have feature.pkl file, skip the MSA and template finding step
