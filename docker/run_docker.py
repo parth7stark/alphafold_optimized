@@ -246,6 +246,7 @@ def main(argv):
       detach=True,
       mounts=mounts,
       user=FLAGS.docker_user,
+      shm_size="10.24gb",
       environment={
           'NVIDIA_VISIBLE_DEVICES': FLAGS.gpu_devices,
           # The following flags allow us to make predictions on proteins that
