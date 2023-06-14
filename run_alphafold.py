@@ -465,6 +465,11 @@ def structure_ranker( model_runners: Dict[str, model.RunModel],
       else:
         f.write(unrelaxed_pdbs[model_name])
 
+  result_output_path = os.path.join(output_dir, f'result_{model_name}.pkl')
+  with open(result_output_path, 'rb') as f:
+    np_prediction_result = pickle.load(f)
+  prediction_result = _np_to_jnp(dict(np_prediction_result))
+  
   ranking_output_path = os.path.join(output_dir, 'ranking_debug.json')
   with open(ranking_output_path, 'w') as f:
     label = 'iptm+ptm' if 'iptm' in prediction_result else 'plddts'
