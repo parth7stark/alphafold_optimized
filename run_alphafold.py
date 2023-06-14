@@ -372,7 +372,8 @@ def predict_structure(
   
   outputs = list(zip(*outputs)) #->[(dic0, dic0...), (dic1, dic1...), ...]
   assert len(outputs) == 4, "There should be only four tuples ready..."
-  timings, unrelaxed_proteins, unrelaxed_pdbs, ranking_confidences = [functools.reduce(ranking_confidences, out) for out in outputs] #->List[dict]
+
+  timings, unrelaxed_proteins, unrelaxed_pdbs, ranking_confidences = [functools.reduce(collate_dictionary, out) for out in outputs] #->List[dict]
   return timings, unrelaxed_proteins, unrelaxed_pdbs, ranking_confidences
   
 def structure_ranker( model_runners: Dict[str, model.RunModel],
