@@ -297,7 +297,7 @@ def predict_structure(
   num_models = len(model_runners)
   num_gpus = jax.local_device_count()
   
-  @ray.remote(num_gpus=1/num_gpus)
+  @ray.remote(num_gpus=1)
   def predict_one_structure(
                             model_index :int,
                             model_name: str, 
