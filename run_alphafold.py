@@ -612,7 +612,7 @@ def main(argv):
                                                                                           models_to_relax=FLAGS.models_to_relax)
       structure_ranker( model_runners=model_runners,
                         random_seed=random_seed,
-                        output_dir_base=output_dir_base,
+                        output_dir_base=FLAGS.output_dir,
                         fasta_name=fasta_name,
                         amber_relaxer=amber_relaxer,
                         models_to_relax=FLAGS.models_to_relax,
@@ -624,7 +624,7 @@ def main(argv):
   else:  
       structure_ranker( model_runners=model_runners,
                         random_seed=random_seed,
-                        output_dir_base=output_dir_base,
+                        output_dir_base=FLAGS.output_dir,
                         fasta_name=fasta_name,
                         amber_relaxer=amber_relaxer,
                         models_to_relax=FLAGS.models_to_relax,
