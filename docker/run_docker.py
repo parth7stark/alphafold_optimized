@@ -96,6 +96,9 @@ flags.DEFINE_string(
 flags.DEFINE_boolean(
     'continued_simulation', True,
     'Whether to use MD only... False is MD only, True is the whole!')
+flags.DEFINE_boolean(
+    'use_amber', True,
+    'Use which MD engine? True is amber False is Charmm for now')
 
 FLAGS = flags.FLAGS
 
