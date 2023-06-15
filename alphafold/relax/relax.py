@@ -31,7 +31,8 @@ class AmberRelaxation(object):
                stiffness: float,
                exclude_residues: Sequence[int],
                max_outer_iterations: int,
-               use_gpu: bool):
+               use_gpu: bool,
+               use_amber: bool):
     """Initialize Amber Relaxer.
 
     Args:
@@ -55,17 +56,27 @@ class AmberRelaxation(object):
     self._exclude_residues = exclude_residues
     self._max_outer_iterations = max_outer_iterations
     self._use_gpu = use_gpu
-
+    self._use_amber = use_amber
+                 
   def process(self, *,
               prot: protein.Protein
               ) -> Tuple[str, Dict[str, Any], Sequence[float]]:
     """Runs Amber relax on a prediction, adds hydrogens, returns PDB string."""
-    out = amber_minimize.run_pipeline(
-        prot=prot, max_iterations=self._max_iterations,
-        tolerance=self._tolerance, stiffness=self._stiffness,
-        exclude_residues=self._exclude_residues,
-        max_outer_iterations=self._max_outer_iterations,
-        use_gpu=self._use_gpu)
+    if self._use_amber:
+      out = amber_minimize.run_pipeline(
+          prot=prot, max_iterations=self._max_iterations,
+          tolerance=self._tolerance, stiffness=self._stiffness,
+          exclude_residues=self._exclude_residues,
+          max_outer_iterations=self._max_outer_iterations,
+          use_gpu=self._use_gpu)
+    else:
+      out = charmm_minimize.run_pipeline(
+          prot=prot, max_iterations=self._max_iterations,
+          tolerance=self._tolerance, stiffness=self._stiffness,
+          exclude_residues=self._exclude_residues,
+          max_outer_iterations=self._max_outer_iterations,
+          use_gpu=self._use_gpu)
+      
     min_pos = out['pos']
     start_pos = out['posinit']
     rmsd = np.sqrt(np.sum((start_pos - min_pos)**2) / start_pos.shape[0])
