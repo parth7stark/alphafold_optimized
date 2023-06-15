@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Restrained Amber Minimization of a structure."""
+"""Restrained Charmm Minimization of a structure."""
 
 import io
 import time
@@ -139,7 +139,7 @@ def _check_cleaned_atoms(pdb_cleaned_string: str, pdb_ref_string: str):
 def _check_residues_are_well_defined(prot: protein.Protein):
   """Checks that all residues contain non-empty atom sets."""
   if (prot.atom_mask.sum(axis=-1) == 0).any():
-    raise ValueError("Amber minimization can only be performed on proteins with"
+    raise ValueError("Charmm minimization can only be performed on proteins with"
                      " well-defined residues. This protein contains at least"
                      " one residue with no atoms.")
 
@@ -435,10 +435,10 @@ def run_pipeline(
     max_attempts: int = 100,
     checks: bool = True,
     exclude_residues: Optional[Sequence[int]] = None):
-  """Run iterative amber relax.
+  """Run iterative charmm relax.
 
   Successive relax iterations are performed until all violations have been
-  resolved. Each iteration involves a restrained Amber minimization, with
+  resolved. Each iteration involves a restrained Charmm minimization, with
   restraint exclusions determined by violation-participating residues.
 
   Args:
