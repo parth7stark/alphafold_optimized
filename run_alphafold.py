@@ -246,7 +246,7 @@ def collate_dictionary(dic0, dic1):
   dic0.update(dic1)
   return dic0
 
-def fetch_files_for_rank(output_dir_base, fasta_name, model_runners, prediction_result):
+def fetch_files_for_rank(output_dir_base, fasta_name, model_runners):
   output_dir = os.path.join(output_dir_base, fasta_name)
   unrelaxed_pdbs = {}
   #NEED this for: timings, unrelaxed_proteins, unrelaxed_pdbs, ranking_confidences
@@ -675,7 +675,7 @@ def main(argv):
                         label=label,
                         continued_simulation=FLAGS.continued_simulation)
     else:  
-      timings, unrelaxed_pdbs, ranking_confidences, label = fetch_files_for_rank(output_dir_base, fasta_name, model_runners, prediction_result)
+      timings, unrelaxed_pdbs, ranking_confidences, label = fetch_files_for_rank(FLAGS.output_dir, fasta_name, model_runners)
       structure_ranker( model_runners=model_runners,
                         random_seed=random_seed,
                         output_dir_base=FLAGS.output_dir,
