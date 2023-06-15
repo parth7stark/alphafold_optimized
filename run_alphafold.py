@@ -272,7 +272,7 @@ def fetch_files_for_rank(output_dir_base, fasta_name, model_runners, prediction_
     ranking_outputs = json.load(f)
     ranking_confidences = ranking_outputs[label]
     
-  return timings, unrelaxed_pdb_path, ranking_confidences, label
+  return timings, unrelaxed_pdbs, ranking_confidences, label
 
 def predict_structure(
     fasta_path: str,
@@ -675,7 +675,7 @@ def main(argv):
                         label=label,
                         continued_simulation=FLAGS.continued_simulation)
     else:  
-      fetch_files_for_rank(output_dir_base, fasta_name, model_runners, prediction_result)
+      timings, unrelaxed_pdbs, ranking_confidences, label = fetch_files_for_rank(output_dir_base, fasta_name, model_runners, prediction_result)
       structure_ranker( model_runners=model_runners,
                         random_seed=random_seed,
                         output_dir_base=FLAGS.output_dir,
