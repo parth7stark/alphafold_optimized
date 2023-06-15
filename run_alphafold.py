@@ -602,9 +602,10 @@ def main(argv):
   logging.info('Using random seed %d for the data pipeline', random_seed)
 
   # Predict structure for each of the sequences.
-  if FLAGS.continued_simulation:
-    for i, fasta_path in enumerate(FLAGS.fasta_paths):
-      fasta_name = fasta_names[i]
+  
+  for i, fasta_path in enumerate(FLAGS.fasta_paths):
+    fasta_name = fasta_names[i]
+    if FLAGS.continued_simulation:
       timings, unrelaxed_proteins, unrelaxed_pdbs, ranking_confidences = predict_structure(
                                                                                           fasta_path=fasta_path,
                                                                                           fasta_name=fasta_name,
@@ -626,7 +627,7 @@ def main(argv):
                         unrelaxed_pdbs=unrelaxed_pdbs, 
                         ranking_confidences=ranking_confidences,
                         continued_simulation=FLAGS.continued_simulation)
-  else:  
+    else:  
       structure_ranker( model_runners=model_runners,
                         random_seed=random_seed,
                         output_dir_base=FLAGS.output_dir,
