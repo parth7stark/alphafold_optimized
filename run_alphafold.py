@@ -44,7 +44,7 @@ import numpy as np
 import jax
 
 import ray
-import functools
+import functools, itertools
 # Internal import (7716).
 
 logging.set_verbosity(logging.INFO)
@@ -246,6 +246,34 @@ def collate_dictionary(dic0, dic1):
   dic0.update(dic1)
   return dic0
 
+def fetch_files_for_rank(output_dir_base, fasta_name, model_runners, prediction_result):
+  output_dir = os.path.join(output_dir_base, fasta_name)
+  unrelaxed_pdbs = {}
+  #NEED this for: timings, unrelaxed_proteins, unrelaxed_pdbs, ranking_confidences
+
+  timings_output_path = os.path.join(output_dir, 'timings.json')
+  with open(timings_output_path, 'r') as f:
+    timings = json.load(f)
+
+  # for model_name, _ in itertools.islice(model_runners.items(), 1): #do it only once!
+  for model_name, _ in model_runners.items(): #do it only once!
+    result_output_path = os.path.join(output_dir, f'result_{model_name}.pkl')
+    with open(result_output_path, 'rb') as f:
+      np_prediction_result = pickle.load(f)
+    prediction_result = = _np_to_jnp(dict(np_prediction_result))  
+    
+    unrelaxed_pdb_path = os.path.join(output_dir, f'unrelaxed_{model_name}.pdb')
+    with open(unrelaxed_pdb_path, 'r') as f:
+      unrelaxed_pdbs[model_name] = f.read()
+      
+  ranking_output_path = os.path.join(output_dir, 'ranking_debug.json')
+  with open(ranking_output_path, 'r') as f:
+    label = 'iptm+ptm' if 'iptm' in prediction_result else 'plddts'
+    ranking_outputs = json.load(f)
+    ranking_confidences = ranking_outputs[label]
+    
+  return timings, unrelaxed_pdb_path, ranking_confidences, label
+
 def predict_structure(
     fasta_path: str,
     fasta_name: str,
@@ -342,6 +370,8 @@ def predict_structure(
 
     # Remove jax dependency from results.
     np_prediction_result = _jnp_to_np(dict(prediction_result))
+    #Get a label early on!                          
+    label = 'iptm+ptm' if 'iptm' in prediction_result else 'plddts'
 
     # Save the model outputs.
     result_output_path = os.path.join(output_dir, f'result_{model_name}.pkl')
@@ -364,17 +394,31 @@ def predict_structure(
     with open(unrelaxed_pdb_path, 'w') as f:
       f.write(unrelaxed_pdbs[model_name])
       
-    return timings, unrelaxed_proteins, unrelaxed_pdbs, ranking_confidences
-
+    return timings, unrelaxed_proteins, unrelaxed_pdbs, ranking_confidences, label
+      
   outputs = [predict_one_structure.remote(model_index, model_name, model_runner) for model_index, (model_name, model_runner) in enumerate(model_runners.items())]    
   outputs = ray.get(outputs) #->List[tuple(dict)]
   ray.shutdown()
   
-  outputs = list(zip(*outputs)) #->[(dic0, dic0...), (dic1, dic1...), ...]
+  outputs_ = list(zip(*outputs)) #->[(dic0, dic0...), (dic1, dic1...), ...]
+  outputs = outputs_[:4] #-> Get the tuple of dicts
+  label = outputs_[-1][0] #-> Get the tuple of labels then a label
   assert len(outputs) == 4, "There should be only four tuples ready..."
 
   timings, unrelaxed_proteins, unrelaxed_pdbs, ranking_confidences = [functools.reduce(collate_dictionary, out) for out in outputs] #->List[dict]
-  return timings, unrelaxed_proteins, unrelaxed_pdbs, ranking_confidences
+
+  #timings has to be saved to resume MD
+  timings_output_path = os.path.join(output_dir, 'timings.json')
+  with open(timings_output_path, 'w') as f:
+    f.write(json.dumps(timings, indent=4))
+    
+  #ranking_confidences has to be saved to resume MD
+  ranking_output_path = os.path.join(output_dir, 'ranking_debug.json')
+  with open(ranking_output_path, 'w') as f:
+    f.write(json.dumps(
+        {label: ranking_confidences}, indent=4))
+      
+  return timings, unrelaxed_proteins, unrelaxed_pdbs, ranking_confidences, label
   
 def structure_ranker( model_runners: Dict[str, model.RunModel],
                       random_seed: int,
@@ -385,15 +429,17 @@ def structure_ranker( model_runners: Dict[str, model.RunModel],
                       timings: dict, 
                       unrelaxed_proteins :dict, 
                       unrelaxed_pdbs: dict, 
-                      ranking_confidences: dict, 
+                      ranking_confidences: dict,
+                      label: str,
                       continued_simulation: bool):
   
   output_dir = os.path.join(output_dir_base, fasta_name)
   features_output_path = os.path.join(output_dir, 'features.pkl')
   feature_dict = pickle.load(open(features_output_path, 'rb'))
   num_models = len(model_runners)
-
+                          
   if not continued_simulation:
+    assert isinstance(unrelaxed_proteins, type(None)), "when performing an independent MD, make sure to set unrelaxed_proteins option None"
     logging.info('Independently running (an) MD simulation(s) by setting continued_simulation false option...')
     # Save the model outputs.
     for model_index, (model_name, model_runner) in enumerate(model_runners.items()):
@@ -465,14 +511,14 @@ def structure_ranker( model_runners: Dict[str, model.RunModel],
       else:
         f.write(unrelaxed_pdbs[model_name])
 
-  result_output_path = os.path.join(output_dir, f'result_{model_name}.pkl')
-  with open(result_output_path, 'rb') as f:
-    np_prediction_result = pickle.load(f)
-  prediction_result = _np_to_jnp(dict(np_prediction_result))
+  # result_output_path = os.path.join(output_dir, f'result_{model_name}.pkl')
+  # with open(result_output_path, 'rb') as f:
+  #   np_prediction_result = pickle.load(f)
+  # prediction_result = _np_to_jnp(dict(np_prediction_result))
   
   ranking_output_path = os.path.join(output_dir, 'ranking_debug.json')
   with open(ranking_output_path, 'w') as f:
-    label = 'iptm+ptm' if 'iptm' in prediction_result else 'plddts'
+    # label = 'iptm+ptm' if 'iptm' in prediction_result else 'plddts' #takes a label as an input to the function!
     f.write(json.dumps(
         {label: ranking_confidences, 'order': ranked_order}, indent=4))
 
@@ -606,7 +652,7 @@ def main(argv):
   for i, fasta_path in enumerate(FLAGS.fasta_paths):
     fasta_name = fasta_names[i]
     if FLAGS.continued_simulation:
-      timings, unrelaxed_proteins, unrelaxed_pdbs, ranking_confidences = predict_structure(
+      timings, unrelaxed_proteins, unrelaxed_pdbs, ranking_confidences, label = predict_structure(
                                                                                           fasta_path=fasta_path,
                                                                                           fasta_name=fasta_name,
                                                                                           output_dir_base=FLAGS.output_dir,
@@ -626,8 +672,10 @@ def main(argv):
                         unrelaxed_proteins=unrelaxed_proteins, 
                         unrelaxed_pdbs=unrelaxed_pdbs, 
                         ranking_confidences=ranking_confidences,
+                        label=label,
                         continued_simulation=FLAGS.continued_simulation)
     else:  
+      fetch_files_for_rank(output_dir_base, fasta_name, model_runners, prediction_result)
       structure_ranker( model_runners=model_runners,
                         random_seed=random_seed,
                         output_dir_base=FLAGS.output_dir,
@@ -635,9 +683,10 @@ def main(argv):
                         amber_relaxer=amber_relaxer,
                         models_to_relax=FLAGS.models_to_relax,
                         timings=timings, 
-                        unrelaxed_proteins=unrelaxed_proteins, 
+                        unrelaxed_proteins=None, #since it will be auto-filled 
                         unrelaxed_pdbs=unrelaxed_pdbs, 
                         ranking_confidences=ranking_confidences,
+                        label=label,
                         continued_simulation=FLAGS.continued_simulation)
 
 if __name__ == '__main__':
