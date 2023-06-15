@@ -146,6 +146,7 @@ flags.DEFINE_boolean('use_gpu_relax', None, 'Whether to relax on GPU. '
                      'recommended to enable if possible. GPUs must be available'
                      ' if this setting is enabled.')
 flags.DEFINE_boolean('continued_simulation', None, 'Whether to use MD only..')
+flags.DEFINE_boolean('use_amber', None, 'Use which MD engine..')
 
 FLAGS = flags.FLAGS
 
@@ -485,7 +486,8 @@ def structure_ranker( model_runners: Dict[str, model.RunModel],
   elif models_to_relax == ModelsToRelax.NONE:
     to_relax = []
 
-  for model_name in to_relax:
+  @ray.remote(num_gpus=1)                      
+  def run_one_openmm(model_name):
     t_0 = time.time()
     relaxed_pdb_str, _, violations = amber_relaxer.process(
         prot=unrelaxed_proteins[model_name])
@@ -494,7 +496,15 @@ def structure_ranker( model_runners: Dict[str, model.RunModel],
         'remaining_violations_count': sum(violations)
     }
     timings[f'relax_{model_name}'] = time.time() - t_0
+    return relaxed_pdb_str, relax_metrics, timings    
+    
+  outputs = [run_one_openmm.remote(model_name) for model_name in to_relax]
+  outputs = ray.get(outputs) #->List[tuple(...)]  
+  outputs = list(zip(*outputs)) #-> List[(str,str,str...), (dic,dic,dic...), (dic,dic,dic...)]
+  relaxed_pdb_strs = outputs[0]
+  relax_metrics, timings = [functools.reduce(collate_dictionary, out) for out in outputs[1:]]
 
+  for model_name, relaxed_pdb_str in zip(to_relax, relaxed_pdb_strs):
     relaxed_pdbs[model_name] = relaxed_pdb_str
 
     # Save the relaxed PDB.
@@ -641,7 +651,8 @@ def main(argv):
       stiffness=RELAX_STIFFNESS,
       exclude_residues=RELAX_EXCLUDE_RESIDUES,
       max_outer_iterations=RELAX_MAX_OUTER_ITERATIONS,
-      use_gpu=FLAGS.use_gpu_relax)
+      use_gpu=FLAGS.use_gpu_relax,
+      use_amber=FLAGS.use_amber)
 
   random_seed = FLAGS.random_seed
   if random_seed is None:
