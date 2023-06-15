@@ -260,7 +260,7 @@ def fetch_files_for_rank(output_dir_base, fasta_name, model_runners, prediction_
     result_output_path = os.path.join(output_dir, f'result_{model_name}.pkl')
     with open(result_output_path, 'rb') as f:
       np_prediction_result = pickle.load(f)
-    prediction_result = = _np_to_jnp(dict(np_prediction_result))  
+    prediction_result = _np_to_jnp(dict(np_prediction_result))  
     
     unrelaxed_pdb_path = os.path.join(output_dir, f'unrelaxed_{model_name}.pdb')
     with open(unrelaxed_pdb_path, 'r') as f:
