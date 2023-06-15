@@ -500,6 +500,8 @@ def structure_ranker( model_runners: Dict[str, model.RunModel],
     
   outputs = [run_one_openmm.remote(model_name) for model_name in to_relax]
   outputs = ray.get(outputs) #->List[tuple(...)]  
+  ray.shutdown()
+                        
   outputs = list(zip(*outputs)) #-> List[(str,str,str...), (dic,dic,dic...), (dic,dic,dic...)]
   relaxed_pdb_strs = outputs[0]
   relax_metrics, timings = [functools.reduce(collate_dictionary, out) for out in outputs[1:]]
