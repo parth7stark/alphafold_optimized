@@ -442,6 +442,7 @@ def structure_ranker( model_runners: Dict[str, model.RunModel],
     assert isinstance(unrelaxed_proteins, type(None)), "when performing an independent MD, make sure to set unrelaxed_proteins option None"
     logging.info('Independently running (an) MD simulation(s) by setting continued_simulation false option...')
     # Save the model outputs.
+    unrelaxed_proteins = {}
     for model_index, (model_name, model_runner) in enumerate(model_runners.items()):
       model_random_seed = model_index + random_seed * num_models
   
