@@ -31,6 +31,9 @@ import openmm
 from openmm import unit
 from openmm import app as openmm_app
 from openmm.app.internal.pdbstructure import PdbStructure
+from openmm.app.dcdreporter import DCDReporter
+
+import pdbfixer
 
 
 ENERGY = unit.kilocalories_per_mole
@@ -79,15 +82,26 @@ def _openmm_minimize(
     restraint_set: str,
     exclude_residues: Sequence[int],
     use_gpu: bool):
+      
   """Minimize energy via openmm."""
-
   pdb_file = io.StringIO(pdb_str)
-  pdb = openmm_app.PDBFile(pdb_file)
 
-  force_field = openmm_app.ForceField("amber99sb.xml")
+  #BELOW: https://github.com/openmm/pdbfixer/blob/db2886903fe835919695c465fd20a9ae3b2a03cd/pdbfixer/pdbfixer.py#L93:~:text=of%20PDBFixer%20object.-,%3E%3E%3E%20fixer%20%3D%20PDBFixer(pdbid%3D%271YRI%27),%3E%3E%3E%20fixer.replaceNonstandardResidues(),-%22%22%22
+  pdbfixer.pdbfixer.substitutions.update(dict(HSE="HIS")) #HSE is not part of original subsitutions!
+  fixer = pdbfixer.PDBFixer(pdb_file)
+  fixer.findNonstandardResidues()
+  fixer.replaceNonstandardResidues()
+
+  fixer.findMissingResidues()
+  fixer.findMissingAtoms()
+  fixer.addMissingAtoms()
+      
+  pdb = fixer
+
+  force_field = openmm_app.ForceField("charmm36.xml")
   constraints = openmm_app.HBonds
   system = force_field.createSystem(
-      pdb.topology, constraints=constraints)
+      pdb.topology, constraints=constraints, nonbondedMethod=openmm_app.PME, nonbondedCutoff=1*unit.nanometer)
   if stiffness > 0 * ENERGY / (LENGTH**2):
     _add_restraints(system, pdb, stiffness, restraint_set, exclude_residues)
 
@@ -101,8 +115,11 @@ def _openmm_minimize(
   state = simulation.context.getState(getEnergy=True, getPositions=True)
   ret["einit"] = state.getPotentialEnergy().value_in_unit(ENERGY)
   ret["posinit"] = state.getPositions(asNumpy=True).value_in_unit(LENGTH)
+      
+  simulation.reporters.append(DCDReporter('minimized.dcd', 50))
   simulation.minimizeEnergy(maxIterations=max_iterations,
                             tolerance=tolerance)
+      
   state = simulation.context.getState(getEnergy=True, getPositions=True)
   ret["efinal"] = state.getPotentialEnergy().value_in_unit(ENERGY)
   ret["pos"] = state.getPositions(asNumpy=True).value_in_unit(LENGTH)
