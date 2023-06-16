@@ -432,7 +432,8 @@ def structure_ranker( model_runners: Dict[str, model.RunModel],
                       unrelaxed_pdbs: dict, 
                       ranking_confidences: dict,
                       label: str,
-                      continued_simulation: bool):
+                      continued_simulation: bool,
+                      use_amber: bool):
   
   output_dir = os.path.join(output_dir_base, fasta_name)
   features_output_path = os.path.join(output_dir, 'features.pkl')
@@ -517,7 +518,8 @@ def structure_ranker( model_runners: Dict[str, model.RunModel],
 
   # Write out relaxed PDBs in rank order.
   for idx, model_name in enumerate(ranked_order):
-    ranked_output_path = os.path.join(output_dir, f'ranked_{idx}.pdb')
+    suffix = "amber" if use_amber else "charmm"
+    ranked_output_path = os.path.join(output_dir, f'ranked_{idx}_{suffix}.pdb')
     with open(ranked_output_path, 'w') as f:
       if model_name in relaxed_pdbs:
         f.write(relaxed_pdbs[model_name])
@@ -687,7 +689,8 @@ def main(argv):
                         unrelaxed_pdbs=unrelaxed_pdbs, 
                         ranking_confidences=ranking_confidences,
                         label=label,
-                        continued_simulation=FLAGS.continued_simulation)
+                        continued_simulation=FLAGS.continued_simulation,
+                        use_amber=FLAGS.use_amber)
     else:  
       timings, unrelaxed_pdbs, ranking_confidences, label = fetch_files_for_rank(FLAGS.output_dir, fasta_name, model_runners)
       structure_ranker( model_runners=model_runners,
@@ -701,7 +704,8 @@ def main(argv):
                         unrelaxed_pdbs=unrelaxed_pdbs, 
                         ranking_confidences=ranking_confidences,
                         label=label,
-                        continued_simulation=FLAGS.continued_simulation)
+                        continued_simulation=FLAGS.continued_simulation,
+                        use_amber=FLAGS.use_amber)
 
 if __name__ == '__main__':
   flags.mark_flags_as_required([
