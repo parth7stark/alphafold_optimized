@@ -234,6 +234,7 @@ def main(argv):
       f'--use_gpu_relax={use_gpu_relax}',
       '--logtostderr',
       f'--continued_simulation={FLAGS.continued_simulation}',
+      f'--use_amber={FLAGS.use_amber}',
   ])
 
   client = docker.from_env()
