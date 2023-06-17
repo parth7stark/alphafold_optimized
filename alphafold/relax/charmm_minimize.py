@@ -106,7 +106,7 @@ def _openmm_minimize(
   force_field = openmm_app.ForceField("charmm36.xml")
   constraints = openmm_app.HBonds
   system = force_field.createSystem(
-      pdb.topology, constraints=constraints, nonbondedMethod=openmm_app.PME, nonbondedCutoff=1*unit.nanometer)
+      pdb.topology, constraints=constraints)
   if stiffness > 0 * ENERGY / (LENGTH**2):
     _add_restraints(system, pdb, stiffness, restraint_set, exclude_residues)
 
