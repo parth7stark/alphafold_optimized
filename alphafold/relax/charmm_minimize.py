@@ -34,7 +34,7 @@ from openmm.app.internal.pdbstructure import PdbStructure
 from openmm.app.dcdreporter import DCDReporter
 
 import pdbfixer
-
+import tempfile
 
 ENERGY = unit.kilocalories_per_mole
 LENGTH = unit.angstroms
@@ -84,10 +84,10 @@ def _openmm_minimize(
     use_gpu: bool):
       
   """Minimize energy via openmm."""
-  pdb_file = io.StringIO(pdb_str).getvalue()
+  pdb_file = io.StringIO(pdb_str)
   # pdb_file = PdbStructure(pdb_file)
 
-  print(pdb_file, pdb_str)
+  # print(pdb_file, pdb_str)
   #BELOW: https://github.com/openmm/pdbfixer/blob/db2886903fe835919695c465fd20a9ae3b2a03cd/pdbfixer/pdbfixer.py#L93:~:text=of%20PDBFixer%20object.-,%3E%3E%3E%20fixer%20%3D%20PDBFixer(pdbid%3D%271YRI%27),%3E%3E%3E%20fixer.replaceNonstandardResidues(),-%22%22%22
   try:
     pdbfixer.pdbfixer.substitutions.update(dict(HSE="HIS")) #HSE is not part of original subsitutions!
@@ -101,8 +101,12 @@ def _openmm_minimize(
   except Exception as e:
     print(e)
     
-  modeller = openmm_app.Modeller(fixer.topology, fixer.positions)
-  pdb = modeller
+  with tempfile.NamedTemporaryFile(mode='w+') as temp_pdb:
+      openmm_app.PDBFile.writeFile(fixer.topology, fixer.positions, temp_pdb)
+      temp_pdb.flush()
+      pdb = openmm_app.PDBFile(temp_pdb.name)
+    
+  # modeller = openmm_app.Modeller(fixer.topology, fixer.positions)
 
   try:    
     force_field = openmm_app.ForceField("charmm36.xml")
