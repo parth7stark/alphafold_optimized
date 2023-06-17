@@ -121,7 +121,7 @@ def _openmm_minimize(
   ret["einit"] = state.getPotentialEnergy().value_in_unit(ENERGY)
   ret["posinit"] = state.getPositions(asNumpy=True).value_in_unit(LENGTH)
       
-  simulation.reporters.append(DCDReporter('minimized.dcd', 5))
+  # simulation.reporters.append(DCDReporter('minimized.dcd', 5))
   simulation.minimizeEnergy(maxIterations=max_iterations,
                             tolerance=tolerance)
       
