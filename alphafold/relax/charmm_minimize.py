@@ -84,7 +84,7 @@ def _openmm_minimize(
     use_gpu: bool):
       
   """Minimize energy via openmm."""
-  pdb_file = io.StringIO(pdb_str)
+  pdb_file = io.StringIO(pdb_str).getvalue()
   # pdb_file = PdbStructure(pdb_file)
 
   print(pdb_file, pdb_str)
