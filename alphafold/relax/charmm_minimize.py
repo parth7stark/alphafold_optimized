@@ -85,6 +85,8 @@ def _openmm_minimize(
       
   """Minimize energy via openmm."""
   pdb_file = io.StringIO(pdb_str)
+  pdb_file = PdbStructure(pdb_file)
+
   print(pdb_file, pdb_str)
   #BELOW: https://github.com/openmm/pdbfixer/blob/db2886903fe835919695c465fd20a9ae3b2a03cd/pdbfixer/pdbfixer.py#L93:~:text=of%20PDBFixer%20object.-,%3E%3E%3E%20fixer%20%3D%20PDBFixer(pdbid%3D%271YRI%27),%3E%3E%3E%20fixer.replaceNonstandardResidues(),-%22%22%22
   try:
