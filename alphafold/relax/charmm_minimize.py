@@ -84,41 +84,32 @@ def _openmm_minimize(
     use_gpu: bool):
       
   """Minimize energy via openmm.
-  https://github.com/openmm/pdbfixer/blob/master/pdbfixer/tests/test_mutate.py"""
-  pdb_file = io.StringIO(pdb_str)
-  # pdb_file = PdbStructure(pdb_file)
-
-  # print(pdb_file, pdb_str)
+  https://github.com/openmm/pdbfixer/blob/master/pdbfixer/tests/test_mutate.py
   #BELOW: https://github.com/openmm/pdbfixer/blob/db2886903fe835919695c465fd20a9ae3b2a03cd/pdbfixer/pdbfixer.py#L93:~:text=of%20PDBFixer%20object.-,%3E%3E%3E%20fixer%20%3D%20PDBFixer(pdbid%3D%271YRI%27),%3E%3E%3E%20fixer.replaceNonstandardResidues(),-%22%22%22
-  try:
-    pdbfixer.pdbfixer.substitutions.update(dict(HSE="HIS")) #HSE is not part of original subsitutions!
-    fixer = pdbfixer.PDBFixer(pdbfile=pdb_file)
-    fixer.findNonstandardResidues()
-    fixer.replaceNonstandardResidues()
-  
-    fixer.findMissingResidues()
-    fixer.findMissingAtoms()
-    fixer.addMissingAtoms()
-  except Exception as e:
-    print(e)
+  """
+  pdb_file = io.StringIO(pdb_str)
+
+  pdbfixer.pdbfixer.substitutions.update(dict(HSE="HIS")) #HSE is not part of original subsitutions!
+  fixer = pdbfixer.PDBFixer(pdbfile=pdb_file)
+  fixer.findNonstandardResidues()
+  fixer.replaceNonstandardResidues()
+
+  fixer.findMissingResidues()
+  fixer.findMissingAtoms()
+  fixer.addMissingAtoms()
     
   with tempfile.NamedTemporaryFile(mode='w+') as temp_pdb:
       openmm_app.PDBFile.writeFile(fixer.topology, fixer.positions, temp_pdb)
       temp_pdb.flush()
       pdb = openmm_app.PDBFile(temp_pdb.name)
     
-  # modeller = openmm_app.Modeller(fixer.topology, fixer.positions)
+  force_field = openmm_app.ForceField("charmm36.xml")
+  constraints = openmm_app.HBonds
+  system = force_field.createSystem(
+      pdb.topology, constraints=constraints, nonbondedMethod=openmm_app.PME, nonbondedCutoff=1*unit.nanometer)
+  if stiffness > 0 * ENERGY / (LENGTH**2):
+    _add_restraints(system, pdb, stiffness, restraint_set, exclude_residues)
 
-  try:    
-    force_field = openmm_app.ForceField("charmm36.xml")
-    constraints = openmm_app.HBonds
-    system = force_field.createSystem(
-        pdb.topology, constraints=constraints, nonbondedMethod=openmm_app.PME, nonbondedCutoff=1*unit.nanometer)
-    if stiffness > 0 * ENERGY / (LENGTH**2):
-      _add_restraints(system, pdb, stiffness, restraint_set, exclude_residues)
-  except Exception as e:
-    print(e)
-      
   integrator = openmm.LangevinIntegrator(0, 0.01, 0.0)
   platform = openmm.Platform.getPlatformByName("CUDA" if use_gpu else "CPU")
   simulation = openmm_app.Simulation(
