@@ -83,7 +83,8 @@ def _openmm_minimize(
     exclude_residues: Sequence[int],
     use_gpu: bool):
       
-  """Minimize energy via openmm."""
+  """Minimize energy via openmm.
+  https://github.com/openmm/pdbfixer/blob/master/pdbfixer/tests/test_mutate.py"""
   pdb_file = io.StringIO(pdb_str)
   # pdb_file = PdbStructure(pdb_file)
 
