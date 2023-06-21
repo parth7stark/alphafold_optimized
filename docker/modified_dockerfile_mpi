@@ -95,10 +95,14 @@ WORKDIR /app/alphafold
 RUN echo $'#!/bin/bash\n\
 ldconfig\n\
 if [ $OMPI_COMM_WORLD_LOCAL_RANK -eq 0 ] ; then\n\
-  ray start --head \n\
+  ray start --head --node-ip-address="$head_node_ip" --port=$port \
+    --num-cpus "${SLURM_CPUS_PER_TASK}" --num-gpus "${SLURM_GPUS_PER_TASK}" --block &\n\
   python /app/alphafold/run_alphafold.py "$@"\n\
+  sleep 10\n\
 else\n\
-  ray start --ip $head_ip
+  ray start --address "$ip_head" \
+        --num-cpus "${SLURM_CPUS_PER_TASK}" --num-gpus "${SLURM_GPUS_PER_TASK}" --block &\n\
+  sleep 5\n\
 fi\n\
 wait\n\' > /app/run_alphafold.sh \
   && chmod +x /app/run_alphafold.sh
