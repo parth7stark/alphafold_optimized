@@ -104,6 +104,6 @@ else\n\
         --num-cpus "${SLURM_CPUS_PER_TASK}" --num-gpus "${SLURM_GPUS_PER_TASK}" --block &\n\
   sleep 5\n\
 fi\n\
-wait\n\' > /app/run_alphafold.sh \
+wait' > /app/run_alphafold.sh \
   && chmod +x /app/run_alphafold.sh
 ENTRYPOINT ["/app/run_alphafold.sh"]
