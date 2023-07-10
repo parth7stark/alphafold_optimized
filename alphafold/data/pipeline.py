@@ -237,6 +237,8 @@ class DataPipeline:
     msa_outputs = [run_msa_tool.remote(msa_runner, input_fasta_path, msa_out_path, msa_format, use_precomputed_msas, max_sto_sequences) 
                                                                  for msa_runner, input_fasta_path, msa_out_path, msa_format, use_precomputed_msas, max_sto_sequences in zipped_options]
     msa_outputs = ray.get(msa_outputs)
+    ray.shutdown()
+    
     if self._use_small_bfd:
         jackhmmer_uniref90_result, jackhmmer_mgnify_result, jackhmmer_small_bfd_result = msa_outputs
     else:
