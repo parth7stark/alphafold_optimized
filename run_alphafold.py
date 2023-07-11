@@ -45,6 +45,8 @@ import jax
 
 import ray
 import functools, itertools
+from pprint import pformat
+
 # Internal import (7716).
 
 logging.set_verbosity(logging.INFO)
@@ -399,7 +401,7 @@ def predict_structure(
       
   outputs = [predict_one_structure.remote(model_index, model_name, model_runner) for model_index, (model_name, model_runner) in enumerate(model_runners.items())]    
   outputs = ray.get(outputs) #->List[tuple(dict)]
-  ray.shutdown()
+  #ray.shutdown()
   
   outputs_ = list(zip(*outputs)) #->[(dic0, dic0...), (dic1, dic1...), ...]
   outputs = outputs_[:4] #-> Get the tuple of dicts
@@ -501,7 +503,7 @@ def structure_ranker( model_runners: Dict[str, model.RunModel],
     
   outputs = [run_one_openmm.remote(model_name) for model_name in to_relax]
   outputs = ray.get(outputs) #->List[tuple(...)]  
-  ray.shutdown()
+  #ray.shutdown()
                         
   outputs = list(zip(*outputs)) #-> List[(str,str,str...), (dic,dic,dic...), (dic,dic,dic...)]
   relaxed_pdb_strs = outputs[0]
@@ -721,4 +723,17 @@ if __name__ == '__main__':
       'continued_simulation'
   ])
 
+  # Connect to Ray Cluster
+  ray.init(address=os.environ["ip_head"])
+
+  logging.info('''\n\n This cluster consists of
+    {} nodes in total
+    {} CPU resources in total
+    {} GPU resources in total
+'''.format(len(ray.nodes()), ray.cluster_resources()['CPU'], ray.cluster_resources()['GPU']))
+
+  logging.info("\n\n Node information: \n", pformat(ray.nodes()))
+  logging.info("\n\n Resources information: \n", pformat(ray.cluster_resources()))
+
+  logging.info("\n\n Started Alphafold Prediction")
   app.run(main)
