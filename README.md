@@ -1,5 +1,9 @@
-![header](imgs/header.jpg)
-
+<p align="center">
+  <img src="imgs/6AWO.png" alt="alt text" width="100px" align="middle"/>
+  <img src="imgs/6OAN.png" alt="alt text" width="200px" align="middle"/>
+  <img src="imgs/7MEZ.png" alt="alt text" width="200px" align="middle"/>
+  <img src="imgs/6D6U.png" alt="alt text" width="150px" align="middle"/>
+</p>
 # AlphaFold
 
 This package provides an implementation of the inference pipeline of AlphaFold
