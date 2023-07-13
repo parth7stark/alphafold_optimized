@@ -8,8 +8,7 @@ from alphafold.model.modules_multimer import AlphaFold as AlphaFoldMultimer
 
 
 def load_models_config(
-    num_models: int,
-    use_templates: bool,
+    use_templates: bool = True,
     num_recycles: Optional[int] = None,
     recycle_early_stop_tolerance: Optional[float] = None,
     num_ensemble: int = 1,
