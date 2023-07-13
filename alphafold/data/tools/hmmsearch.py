@@ -89,7 +89,7 @@ class Hmmsearch(object):
       cmd = [
           self.binary_path,
           '--noali',  # Don't include the alignment in stdout.
-          '--cpu', '8'
+          '--cpu', '16'
       ]
       # If adding flags, we have to do so before the output and input:
       if self.flags:

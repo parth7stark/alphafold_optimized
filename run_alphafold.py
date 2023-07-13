@@ -46,6 +46,7 @@ import jax
 import ray
 import functools, itertools
 from pprint import pformat
+import datetime
 
 # Internal import (7716).
 
@@ -315,9 +316,12 @@ def predict_structure(
   features_output_path = os.path.join(output_dir, 'features.pkl')
   with open(features_output_path, 'wb') as f:
     pickle.dump(feature_dict, f, protocol=4)
-
-  timings['features'] = time.time() - t_0
+  end_time = time.time()
+  timings['features'] = end_time - t_0
+  timings['features_start_time'] = datetime.datetime.fromtimestamp(t_0).strftime("%H:%M:%S")
+  timings['features_end_time'] =  datetime.datetime.fromtimestamp(end_time).strftime("%H:%M:%S")
     
+
   unrelaxed_pdbs = {}
   unrelaxed_proteins = {}
   relaxed_pdbs = {}
@@ -338,13 +342,20 @@ def predict_structure(
     model_random_seed = model_index + random_seed * num_models
     processed_feature_dict = model_runner.process_features(
         feature_dict, random_seed=model_random_seed)
-    timings[f'process_features_{model_name}'] = time.time() - t_0
+    end_time = time.time()
+    timings[f'process_features_{model_name}'] = end_time - t_0
+    timings[f'process_features_{model_name}_start_time'] = datetime.datetime.fromtimestamp(t_0).strftime("%H:%M:%S")
+    timings[f'process_features_{model_name}_end_time'] =  datetime.datetime.fromtimestamp(end_time).strftime("%H:%M:%S")
 
     t_0 = time.time()
     prediction_result = model_runner.predict(processed_feature_dict,
                                              random_seed=model_random_seed)
-    t_diff = time.time() - t_0
+    end_time = time.time()
+    t_diff = end_time - t_0
     timings[f'predict_and_compile_{model_name}'] = t_diff
+    timings[f'predict_and_compile_{model_name}_start_time'] = datetime.datetime.fromtimestamp(t_0).strftime("%H:%M:%S")
+    timings[f'predict_and_compile_{model_name}_end_time'] = datetime.datetime.fromtimestamp(end_time).strftime("%H:%M:%S")
+
     logging.info(
         'Total JAX model %s on %s predict time (includes compilation time, see --benchmark): %.1fs',
         model_name, fasta_name, t_diff)
@@ -353,8 +364,12 @@ def predict_structure(
       t_0 = time.time()
       model_runner.predict(processed_feature_dict,
                            random_seed=model_random_seed)
-      t_diff = time.time() - t_0
+      end_time = time.time()
+      t_diff = end_time - t_0
       timings[f'predict_benchmark_{model_name}'] = t_diff
+      timings[f'predict_benchmark_{model_name}_start_time'] = datetime.datetime.fromtimestamp(t_0).strftime("%H:%M:%S")
+      timings[f'predict_benchmark_{model_name}_end_time'] = datetime.datetime.fromtimestamp(end_time).strftime("%H:%M:%S")
+
       logging.info(
           'Total JAX model %s on %s predict time (excludes compilation time): %.1fs',
           model_name, fasta_name, t_diff)
@@ -498,7 +513,12 @@ def structure_ranker( model_runners: Dict[str, model.RunModel],
         'remaining_violations': violations,
         'remaining_violations_count': sum(violations)
     }
-    timings[f'relax_{model_name}'] = time.time() - t_0
+    end_time = time.time()
+    t_diff = end_time - t_0
+    timings[f'relax_{model_name}'] = t_diff
+    timings[f'relax_{model_name}_start_time'] = datetime.datetime.fromtimestamp(t_0).strftime("%H:%M:%S")
+    timings[f'relax_{model_name}_end_time'] = datetime.datetime.fromtimestamp(end_time).strftime("%H:%M:%S")
+
     return relaxed_pdb_str, relax_metrics, timings    
     
   outputs = [run_one_openmm.remote(model_name) for model_name in to_relax]
@@ -551,6 +571,10 @@ def structure_ranker( model_runners: Dict[str, model.RunModel],
 
 
 def main(argv):
+  logging.info("\n\n Alphafold Prediction Started")
+
+  total_time = {}
+  t_setup_start = time.time()
   if len(argv) > 1:
     raise app.UsageError('Too many command-line arguments.')
 
@@ -665,9 +689,16 @@ def main(argv):
     random_seed = random.randrange(sys.maxsize // len(model_runners))
   logging.info('Using random seed %d for the data pipeline', random_seed)
 
+  t_setup_end = time.time()
+  total_time['setting_up_time'] = t_setup_end - t_setup_start
+  total_time['setting_up_start_time'] = datetime.datetime.fromtimestamp(t_setup_start).strftime("%H:%M:%S")
+  total_time['setting_up_end_time'] =  datetime.datetime.fromtimestamp(t_setup_end).strftime("%H:%M:%S")
+
   # Predict structure for each of the sequences.
-  
+  t_pred_start = time.time()
   for i, fasta_path in enumerate(FLAGS.fasta_paths):
+    additional_timings = {}
+    t_0 = time.time()
     fasta_name = fasta_names[i]
     if FLAGS.continued_simulation:
       timings, unrelaxed_proteins, unrelaxed_pdbs, ranking_confidences, label = predict_structure(
@@ -708,6 +739,38 @@ def main(argv):
                         label=label,
                         continued_simulation=FLAGS.continued_simulation,
                         use_amber=FLAGS.use_amber)
+    end_time = time.time()
+    additional_timings[f'{fasta_name}_prediction_time'] = end_time - t_0
+    additional_timings[f'{fasta_name}_prediction_start_time'] = datetime.datetime.fromtimestamp(t_0).strftime("%H:%M:%S")
+    additional_timings[f'{fasta_name}_prediction_end_time'] =  datetime.datetime.fromtimestamp(end_time).strftime("%H:%M:%S")
+
+    additional_timings.update(total_time)
+    logging.info('\n\n Additional timings for %s: %s', fasta_name, additional_timings)
+
+    output_dir = os.path.join(FLAGS.output_dir, fasta_name)
+
+    additional_timings_output_path = os.path.join(output_dir, 'additional_timings.json')
+    with open(additional_timings_output_path, 'w') as f:
+      f.write(json.dumps(additional_timings, indent=4))
+
+
+  t_pred_end = time.time()
+  total_time['prediction_time'] = t_pred_end - t_pred_start
+  total_time['prediction_start_time'] = datetime.datetime.fromtimestamp(t_pred_start).strftime("%H:%M:%S")
+  total_time['prediction_end_time'] =  datetime.datetime.fromtimestamp(t_pred_end).strftime("%H:%M:%S")
+
+  total_time['Total Prediction Time'] = t_pred_end - t_setup_start
+  total_time['Total_start_time'] = datetime.datetime.fromtimestamp(t_setup_start).strftime("%H:%M:%S")
+  total_time['Total_end_time'] =  datetime.datetime.fromtimestamp(t_pred_end).strftime("%H:%M:%S")
+
+  # Save this dict as json file
+  logging.info('\n\n Total timing info: %s', total_time)
+
+  total_time_output_path = os.path.join(FLAGS.output_dir, 'total_time.json')
+  with open(total_time_output_path, 'w') as f:
+    f.write(json.dumps(total_time, indent=4))
+
+  logging.info("\n\n Alphafold Prediction Ended")
 
 if __name__ == '__main__':
   flags.mark_flags_as_required([
@@ -732,8 +795,7 @@ if __name__ == '__main__':
     {} GPU resources in total
 '''.format(len(ray.nodes()), ray.cluster_resources()['CPU'], ray.cluster_resources()['GPU']))
 
-  logging.info("\n\n Node information: \n", pformat(ray.nodes()))
-  logging.info("\n\n Resources information: \n", pformat(ray.cluster_resources()))
+  logging.info("\n\n Node information: \n {}".format(pformat(ray.nodes())))
+  logging.info("\n\n Resources information: \n {}".format(pformat(ray.cluster_resources())))
 
-  logging.info("\n\n Started Alphafold Prediction")
   app.run(main)
