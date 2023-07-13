@@ -32,6 +32,7 @@ from alphafold.data import parsers
 from alphafold.data import pipeline
 from alphafold.data.tools import jackhmmer
 import numpy as np
+import ray
 
 # Internal import (7716).
 
@@ -224,9 +225,15 @@ class DataPipeline:
   def _all_seq_msa_features(self, input_fasta_path, msa_output_dir):
     """Get MSA features for unclustered uniprot, for pairing."""
     out_path = os.path.join(msa_output_dir, 'uniprot_hits.sto')
-    result = pipeline.run_msa_tool(
+    
+    # result = pipeline.run_msa_tool(
+    #     self._uniprot_msa_runner, input_fasta_path, out_path, 'sto',
+    #     self.use_precomputed_msas)
+    result = [pipeline.run_msa_tool.remote(
         self._uniprot_msa_runner, input_fasta_path, out_path, 'sto',
-        self.use_precomputed_msas)
+        self.use_precomputed_msas, None)]
+    result = ray.get(result)[0]
+    
     msa = parsers.parse_stockholm(result['sto'])
     msa = msa.truncate(max_seqs=self._max_uniprot_hits)
     all_seq_features = pipeline.make_msa_features([msa])
