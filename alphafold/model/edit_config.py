@@ -106,34 +106,4 @@ def load_models_config(
             if recycle_early_stop_tolerance is not None:
                 model_config.model.recycle_early_stop_tolerance = recycle_early_stop_tolerance
             
-            # get model runner
-            params = data.get_model_haiku_params(
-                model_name="model_" + str(model_number) + model_suffix,
-                data_dir=str(data_dir), fuse=use_fuse)
-            model_runner = model.RunModel(
-                model_config,
-                params,
-            )
-        
-        model_name = f"model_{model_number}"
-        params = data.get_model_haiku_params(
-            model_name=model_name + model_suffix, data_dir=str(data_dir), fuse=use_fuse,
-        )
-        # keep only parameters of compiled model
-        params_subset = {}
-        for k in model_runner.params.keys():
-            params_subset[k] = params[k]
-
-        model_runner_and_params_build_order.append(
-            (model_name, model_runner, params_subset)
-        )
-    # reorder model
-    for n, model_number in enumerate(model_order):
-        if n == num_models:
-            break
-        model_name = f"model_{model_number}"
-        for m in model_runner_and_params_build_order:
-            if model_name == m[0]:
-                model_runner_and_params.append(m)
-                break
-    return model_runner_and_params
+    return model_config
