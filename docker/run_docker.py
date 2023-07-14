@@ -94,7 +94,7 @@ flags.DEFINE_string(
     'Valid options are: uid or uid:gid, non-numeric values are not recognised '
     'by Docker unless that user has been created within the container.')
 flags.DEFINE_boolean(
-    'perform_MD_only', True,
+    'perform_MD_only', False,
     'Whether to use MD only... False is MD only, True is the whole!')
 flags.DEFINE_boolean(
     'use_amber', True,
