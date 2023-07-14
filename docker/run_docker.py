@@ -245,6 +245,14 @@ def main(argv):
       '--logtostderr',
       f'--perform_MD_only={FLAGS.perform_MD_only}',
       f'--use_amber={FLAGS.use_amber}',
+      f'--num_recycles={FLAGS.num_recycles}',
+      f'--recycle_early_stop_tolerance={FLAGS.recycle_early_stop_tolerance}',
+      f'--num_ensemble={FLAGS.num_ensemble}',
+      f'--max_seq={FLAGS.max_seq}',
+      f'--max_extra_seq={FLAGS.max_extra_seq}',
+      f'--use_fuse={FLAGS.use_fuse}',
+      f'--use_bfloat16={FLAGS.use_bfloat16}',
+      f'--use_dropout={FLAGS.use_dropout}'
   ])
 
   client = docker.from_env()
