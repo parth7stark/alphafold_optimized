@@ -668,7 +668,21 @@ def main(argv):
     #   model_config.model.num_ensemble_eval = num_ensemble
     # else:
     #   model_config.data.eval.num_ensemble = num_ensemble
-    model_config = edit_config(model_config)
+    model_config = edit_config(config=model_config,   
+                                num_recycles = FLAGS.num_recycles,
+                                recycle_early_stop_tolerance = FLAGS.recycle_early_stop_tolerance,
+                                num_ensemble = FLAGS.num_ensemble,
+                                model_order = None,
+                                max_seq = FLAGS.max_seq,
+                                max_extra_seq = FLAGS.max_extra_seq,
+                                use_fuse = FLAGS.use_fuse,
+                                use_bfloat16 = FLAGS.use_bfloat16,
+                                use_dropout = FLAGS.use_dropout,
+                                save_all = True,
+                                model_suffix = FLAGS.model_preset)
+    
+    flags.DEFINE_boolean('use_amber', None, 'Use which MD engine..')
+    
     model_params = data.get_model_haiku_params(
         model_name=model_name, data_dir=FLAGS.data_dir)
     model_runner = model.RunModel(model_config, model_params)
