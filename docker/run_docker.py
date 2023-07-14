@@ -108,7 +108,7 @@ flags.DEFINE_integer('max_seq', None, 'Number of cluster centers?')
 flags.DEFINE_integer('max_extra_seq', None, 'Number of cluster centers?')
 flags.DEFINE_boolean('use_fuse', False, 'Global config for mono and multimer... ')
 flags.DEFINE_boolean('use_bfloat16', True, 'Only for multimer')
-flags.DEFINE_boolean('use_dropout', 1, 'Global config for mono and multimer...')
+flags.DEFINE_boolean('use_dropout', False, 'Global config for mono and multimer...')
 
 FLAGS = flags.FLAGS
 
