@@ -23,7 +23,7 @@ def load_models_config(
     use_fuse: bool = True,
     use_bfloat16: bool = True,
     use_dropout: bool = False,
-    save_all: bool = False,
+    save_all: bool = True,
 
 ) -> List[Tuple[str, model.RunModel, haiku.Params]]:
     """We use only two actual models and swap the parameters to avoid recompiling.
@@ -54,8 +54,8 @@ def load_models_config(
 
             # get configurations
             model_config = config.model_config("model_" + str(model_number) + model_suffix)
-            model_config.model.stop_at_score = float(stop_at_score)
-            model_config.model.rank_by = rank_by
+            # model_config.model.stop_at_score = float(stop_at_score)
+            # model_config.model.rank_by = rank_by
 
             # set dropouts
             model_config.model.global_config.eval_dropout = use_dropout
@@ -93,7 +93,7 @@ def load_models_config(
             if "multimer" in model_suffix:
                 if num_recycles is not None:
                     model_config.model.num_recycle = num_recycles
-                model_config.model.embeddings_and_evoformer.use_cluster_profile = use_cluster_profile
+                # model_config.model.embeddings_and_evoformer.use_cluster_profile = use_cluster_profile
                 model_config.model.num_ensemble_eval = num_ensemble
             else:
                 if num_recycles is not None:
