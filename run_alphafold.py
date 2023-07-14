@@ -149,11 +149,11 @@ flags.DEFINE_boolean('use_gpu_relax', None, 'Whether to relax on GPU. '
                      'Relax on GPU can be much faster than CPU, so it is '
                      'recommended to enable if possible. GPUs must be available'
                      ' if this setting is enabled.')
+flags.DEFINE_boolean('perform_MD_only', None, 'Whether to use MD only..')
+flags.DEFINE_boolean('use_amber', None, 'Whether to use Amber as MD engine or CHARMM')
 
 #Colabfold
 # https://github.com/sokrypton/ColabFold/blob/main/colabfold/alphafold/models.py#L10
-flags.DEFINE_boolean('perform_MD_only', None, 'Whether to use MD only..')
-flags.DEFINE_boolean('use_amber', None, 'Whether to use Amber as MD engine or CHARMM')
 flags.DEFINE_integer('num_recycles', None, 'Different model_preset has different num_recycles...')
 flags.DEFINE_float('recycle_early_stop_tolerance', None, 'Only multimer has this option set...')
 flags.DEFINE_integer('num_ensemble', 1, '1 is a default while CASP is 8...')
