@@ -84,7 +84,7 @@ def make_msa_features(msas: Sequence[parsers.Msa]) -> FeatureDict:
   features['msa_species_identifiers'] = np.array(species_ids, dtype=np.object_)
   return features
 
-@ray.remote(num_cpus=16)
+@ray.remote
 def run_msa_tool(msa_runner, input_fasta_path: str, msa_out_path: str,
                  msa_format: str, use_precomputed_msas: bool,
                  max_sto_sequences: Optional[int] = None
