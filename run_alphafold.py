@@ -726,7 +726,7 @@ def main(argv):
     additional_timings = {}
     t_0 = time.time()
     fasta_name = fasta_names[i]
-    if FLAGS.perform_MD_only:
+    if not FLAGS.perform_MD_only:
       timings, unrelaxed_proteins, unrelaxed_pdbs, ranking_confidences, label = predict_structure(
                                                                                           fasta_path=fasta_path,
                                                                                           fasta_name=fasta_name,
