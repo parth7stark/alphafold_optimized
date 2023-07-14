@@ -679,7 +679,7 @@ def main(argv):
     #   model_config.model.num_ensemble_eval = num_ensemble
     # else:
     #   model_config.data.eval.num_ensemble = num_ensemble
-    model_config = edit_config(config=model_config,   
+    model_config = edit_config.load_models_config(config=model_config,   
                                 num_recycles = FLAGS.num_recycles,
                                 recycle_early_stop_tolerance = FLAGS.recycle_early_stop_tolerance,
                                 num_ensemble = FLAGS.num_ensemble,
