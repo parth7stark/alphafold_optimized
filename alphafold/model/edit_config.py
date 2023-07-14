@@ -2,12 +2,13 @@ from pathlib import Path
 from functools import wraps, partialmethod
 from typing import Tuple, List, Optional
 import haiku
-from alphafold.model import model, config, data
+from alphafold.model import model, data
 from alphafold.model.modules import AlphaFold
 from alphafold.model.modules_multimer import AlphaFold as AlphaFoldMultimer
-
+from ml_collections.config_dict import ConfigDict
 
 def load_models_config(
+    config: ConfigDict = None,
     use_templates: bool = True,
     num_recycles: Optional[int] = None,
     recycle_early_stop_tolerance: Optional[float] = None,
@@ -53,7 +54,8 @@ def load_models_config(
         if model_number in models_need_compilation:
 
             # get configurations
-            model_config = config.model_config("model_" + str(model_number) + model_suffix)
+            # model_config = config.model_config("model_" + str(model_number) + model_suffix)
+            model_config = config #from run_alphafold.py
             # model_config.model.stop_at_score = float(stop_at_score)
             # model_config.model.rank_by = rank_by
 
