@@ -149,8 +149,19 @@ flags.DEFINE_boolean('use_gpu_relax', None, 'Whether to relax on GPU. '
                      'Relax on GPU can be much faster than CPU, so it is '
                      'recommended to enable if possible. GPUs must be available'
                      ' if this setting is enabled.')
-flags.DEFINE_boolean('continued_simulation', None, 'Whether to use MD only..')
-flags.DEFINE_boolean('use_amber', None, 'Use which MD engine..')
+
+#Colabfold
+# https://github.com/sokrypton/ColabFold/blob/main/colabfold/alphafold/models.py#L10
+flags.DEFINE_boolean('perform_MD_only', None, 'Whether to use MD only..')
+flags.DEFINE_boolean('use_amber', None, 'Whether to use Amber as MD engine or CHARMM')
+flags.DEFINE_integer('num_recycles', None, 'Different model_preset has different num_recycles...')
+flags.DEFINE_float('recycle_early_stop_tolerance', None, 'Only multimer has this option set...')
+flags.DEFINE_integer('num_ensemble', 1, '1 is a default while CASP is 8...')
+flags.DEFINE_integer('max_seq', None, 'Number of cluster centers?')
+flags.DEFINE_integer('max_extra_seq', None, 'Number of cluster centers?')
+flags.DEFINE_boolean('use_fuse', False, 'Global config for mono and multimer... ')
+flags.DEFINE_boolean('use_bfloat16', True, 'Only for multimer')
+flags.DEFINE_boolean('use_dropout', 1, 'Global config for mono and multimer...')
 
 FLAGS = flags.FLAGS
 
@@ -450,7 +461,7 @@ def structure_ranker( model_runners: Dict[str, model.RunModel],
                       unrelaxed_pdbs: dict, 
                       ranking_confidences: dict,
                       label: str,
-                      continued_simulation: bool,
+                      perform_MD_only: bool,
                       use_amber: bool):
   
   output_dir = os.path.join(output_dir_base, fasta_name)
@@ -458,9 +469,9 @@ def structure_ranker( model_runners: Dict[str, model.RunModel],
   feature_dict = pickle.load(open(features_output_path, 'rb'))
   num_models = len(model_runners)
                           
-  if not continued_simulation:
+  if not perform_MD_only:
     assert isinstance(unrelaxed_proteins, type(None)), "when performing an independent MD, make sure to set unrelaxed_proteins option None"
-    logging.info('Independently running (an) MD simulation(s) by setting continued_simulation false option...')
+    logging.info('Independently running (an) MD simulation(s) by setting perform_MD_only false option...')
     # Save the model outputs.
     unrelaxed_proteins = {}
     for model_index, (model_name, model_runner) in enumerate(model_runners.items()):
@@ -680,9 +691,6 @@ def main(argv):
                                 use_dropout = FLAGS.use_dropout,
                                 save_all = True,
                                 model_suffix = FLAGS.model_preset)
-    
-    flags.DEFINE_integer('num_recycles', None, 'Different model_preset has different num_recycles...')
-    flags.DEFINE_boolean('num_recycles', None, 'Different model_preset has different num_recycles...')
 
     model_params = data.get_model_haiku_params(
         model_name=model_name, data_dir=FLAGS.data_dir)
@@ -718,7 +726,7 @@ def main(argv):
     additional_timings = {}
     t_0 = time.time()
     fasta_name = fasta_names[i]
-    if FLAGS.continued_simulation:
+    if FLAGS.perform_MD_only:
       timings, unrelaxed_proteins, unrelaxed_pdbs, ranking_confidences, label = predict_structure(
                                                                                           fasta_path=fasta_path,
                                                                                           fasta_name=fasta_name,
@@ -740,7 +748,7 @@ def main(argv):
                         unrelaxed_pdbs=unrelaxed_pdbs, 
                         ranking_confidences=ranking_confidences,
                         label=label,
-                        continued_simulation=FLAGS.continued_simulation,
+                        perform_MD_only=FLAGS.perform_MD_only,
                         use_amber=FLAGS.use_amber)
     else:  
       timings, unrelaxed_pdbs, ranking_confidences, label = fetch_files_for_rank(FLAGS.output_dir, fasta_name, model_runners)
@@ -755,7 +763,7 @@ def main(argv):
                         unrelaxed_pdbs=unrelaxed_pdbs, 
                         ranking_confidences=ranking_confidences,
                         label=label,
-                        continued_simulation=FLAGS.continued_simulation,
+                        perform_MD_only=FLAGS.perform_MD_only,
                         use_amber=FLAGS.use_amber)
     end_time = time.time()
     additional_timings[f'{fasta_name}_prediction_time'] = end_time - t_0
@@ -801,7 +809,7 @@ if __name__ == '__main__':
       'max_template_date',
       'obsolete_pdbs_path',
       'use_gpu_relax',
-      'continued_simulation'
+      'perform_MD_only'
   ])
 
   # Connect to Ray Cluster
