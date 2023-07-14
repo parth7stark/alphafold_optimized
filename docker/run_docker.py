@@ -94,11 +94,21 @@ flags.DEFINE_string(
     'Valid options are: uid or uid:gid, non-numeric values are not recognised '
     'by Docker unless that user has been created within the container.')
 flags.DEFINE_boolean(
-    'continued_simulation', True,
+    'perform_MD_only', True,
     'Whether to use MD only... False is MD only, True is the whole!')
 flags.DEFINE_boolean(
     'use_amber', True,
-    'Use which MD engine? True is amber False is Charmm for now')
+    'Use which MD engine? True is Amber False is Charmm')
+
+#Colabfold https://github.com/sokrypton/ColabFold/blob/main/colabfold/alphafold/models.py#L10
+flags.DEFINE_integer('num_recycles', None, 'Different model_preset has different num_recycles...')
+flags.DEFINE_float('recycle_early_stop_tolerance', None, 'Only multimer has this option set...')
+flags.DEFINE_integer('num_ensemble', 1, '1 is a default while CASP is 8...')
+flags.DEFINE_integer('max_seq', None, 'Number of cluster centers?')
+flags.DEFINE_integer('max_extra_seq', None, 'Number of cluster centers?')
+flags.DEFINE_boolean('use_fuse', False, 'Global config for mono and multimer... ')
+flags.DEFINE_boolean('use_bfloat16', True, 'Only for multimer')
+flags.DEFINE_boolean('use_dropout', 1, 'Global config for mono and multimer...')
 
 FLAGS = flags.FLAGS
 
@@ -233,7 +243,7 @@ def main(argv):
       f'--models_to_relax={FLAGS.models_to_relax}',
       f'--use_gpu_relax={use_gpu_relax}',
       '--logtostderr',
-      f'--continued_simulation={FLAGS.continued_simulation}',
+      f'--perform_MD_only={FLAGS.perform_MD_only}',
       f'--use_amber={FLAGS.use_amber}',
   ])
 
