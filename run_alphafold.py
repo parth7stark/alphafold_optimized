@@ -38,6 +38,7 @@ from alphafold.data.tools import hmmsearch
 from alphafold.model import config
 from alphafold.model import data
 from alphafold.model import model
+from alphafold.model import edit_config
 from alphafold.relax import relax
 import jax.numpy as jnp
 import numpy as np
@@ -655,17 +656,19 @@ def main(argv):
         uniprot_database_path=FLAGS.uniprot_database_path,
         use_precomputed_msas=FLAGS.use_precomputed_msas)
   else:
-    num_predictions_per_model = 1
+    # num_predictions_per_model = 1
+    num_predictions_per_model = FLAGS.num_multimer_predictions_per_model
     data_pipeline = monomer_data_pipeline
 
   model_runners = {}
   model_names = config.MODEL_PRESETS[FLAGS.model_preset]
   for model_name in model_names:
     model_config = config.model_config(model_name)
-    if run_multimer_system:
-      model_config.model.num_ensemble_eval = num_ensemble
-    else:
-      model_config.data.eval.num_ensemble = num_ensemble
+    # if run_multimer_system:
+    #   model_config.model.num_ensemble_eval = num_ensemble
+    # else:
+    #   model_config.data.eval.num_ensemble = num_ensemble
+    model_config = edit_config(model_config)
     model_params = data.get_model_haiku_params(
         model_name=model_name, data_dir=FLAGS.data_dir)
     model_runner = model.RunModel(model_config, model_params)
