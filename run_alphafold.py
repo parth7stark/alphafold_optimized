@@ -681,8 +681,9 @@ def main(argv):
                                 save_all = True,
                                 model_suffix = FLAGS.model_preset)
     
-    flags.DEFINE_boolean('use_amber', None, 'Use which MD engine..')
-    
+    flags.DEFINE_integer('num_recycles', None, 'Different model_preset has different num_recycles...')
+    flags.DEFINE_boolean('num_recycles', None, 'Different model_preset has different num_recycles...')
+
     model_params = data.get_model_haiku_params(
         model_name=model_name, data_dir=FLAGS.data_dir)
     model_runner = model.RunModel(model_config, model_params)
