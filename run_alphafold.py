@@ -469,7 +469,7 @@ def structure_ranker( model_runners: Dict[str, model.RunModel],
   feature_dict = pickle.load(open(features_output_path, 'rb'))
   num_models = len(model_runners)
                           
-  if not perform_MD_only:
+  if perform_MD_only:
     assert isinstance(unrelaxed_proteins, type(None)), "when performing an independent MD, make sure to set unrelaxed_proteins option None"
     logging.info('Independently running (an) MD simulation(s) by setting perform_MD_only false option...')
     # Save the model outputs.
