@@ -12,7 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Functions for building the input features for the AlphaFold model."""
+"""
+Functions for building the input features for the AlphaFold model.
+FoldDock paper
+https://gitlab.com/ElofssonLab/FoldDock/-/blob/main/src/alphafold/alphafold/data/foldonly.py
+"""
 
 import os
 from typing import Mapping, Optional, Sequence
@@ -87,7 +91,11 @@ def make_msa_features(
 
 
 class FoldDataPipeline:
-  """Runs the alignment tools and assembles the input features."""
+  """
+  Runs the alignment tools and assembles the input features.
+  1. Provide custom MSAS (original, OXmatch, Fused etc.)
+  2. Provide saved HHSearch templates
+  """
 
   def __init__(self, pdb70_database_path: str = None,
                template_featurizer: templates.TemplateHitFeaturizer = None):
