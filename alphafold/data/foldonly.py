@@ -129,7 +129,7 @@ class FoldDataPipeline:
       parsed_msas.append(parsed_msa)
       parsed_delmat.append(parsed_deletion_matrix)
 
-    if template_search:
+    if template_search: #In original code, this comes from Jackhmmer
       template_files = template_search.split(',')
       template_result = ''
       for template_file in template_files:
