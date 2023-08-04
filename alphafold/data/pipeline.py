@@ -267,7 +267,7 @@ class DataPipeline:
     mgnify_msa = parsers.parse_stockholm(jackhmmer_mgnify_result['sto'])
 
     pdb_template_hits = self.template_searcher.get_template_hits(
-        output_string=pdb_templates_result, input_sequence=input_sequence)
+        output_string=pdb_templates_result, input_sequence=input_sequence) #This is READ in Foldonly.py
 
 
     # uniref90_msa = parsers.parse_stockholm(jackhmmer_uniref90_result['sto'])
