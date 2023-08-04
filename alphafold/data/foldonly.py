@@ -131,17 +131,27 @@ class FoldDataPipeline:
 
     if template_search:
       template_files = template_search.split(',')
-      hhsearch_result = ''
+      template_result = ''
       for template_file in template_files:
         with open(template_file, 'r') as f:
-          hhsearch_result += f.read()
+          template_result += f.read()
 
-      hhsearch_hits = parsers.parse_hhr(hhsearch_result)
+      if True:
+        template_hits = parsers.parse_hhr(template_result)
+      else:
+        """Gets parsed template hits from the raw string output by the tool."""
+        a3m_string = parsers.convert_stockholm_to_a3m(template_result,
+                                                  remove_first_row_gaps=False)
+        template_hits = parsers.parse_hmmsearch_a3m(
+                                                  query_sequence=input_sequence,
+                                                  a3m_string=a3m_string,
+                                                  skip_first=False)
+                    
       templates_result = self.template_featurizer.get_templates(
         query_sequence=input_sequence,
         query_pdb_code=None,   #input_fasta_path.split('/')[-1][:4],
         query_release_date=None,
-        hits=hhsearch_hits)
+        hits=template_hits)
     else:
       template_features = {}
       for name in TEMPLATE_FEATURES:
