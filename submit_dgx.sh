@@ -61,7 +61,7 @@ export FUNCTION_SIZE_ERROR_THRESHOLD=400000000
 export RAY_memory_usage_threshold=1
 export RAY_memory_monitor_refresh_ms=0
 
-$PYTHON $TCBG_DIR/alphafold/docker/run_docker.py --data_dir=$TCBG_DIR/data_hyun_official --fasta_paths=$FASTA_FILES --max_template_date=$MAX_TEMPLATE_DATE --use_precomputed_msas=$USE_PRECOMPUTED_MSAS --model_preset=$MODEL_PRESET --db_preset=$DB_PRESET --num_multimer_predictions_per_model=$NUM_PREDS_PER_MODEL --enable_gpu_relax=true --output_dir=$TCBG_DIR/outputs --docker_image_name=$DOCKER_NAME --models_to_relax=$MODELS_TO_RELAX --gpu_devices=$GPU_DEVICES --perform_MD_only=$PERFORM_MD_ONLY --use_amber=$USE_AMBER --use_dropout=$USE_DROPOUT --use_bfloat16=$USE_BFLOAT16 --use_fuse=$USE_FUSE --max_seq=$MAX_SEQ --max_extra_seq=$MAX_EXTRA_SEQ --num_ensemble=$NUM_ENSEMBLE --num_recycles=$NUM_RECYCLES --recycle_early_stop_tolerance=$RECYCLE_EARLY
+$PYTHON $TCBG_DIR/alphafold/docker/run_docker_dgx.py --data_dir=$TCBG_DIR/data_hyun_official --fasta_paths=$FASTA_FILES --max_template_date=$MAX_TEMPLATE_DATE --use_precomputed_msas=$USE_PRECOMPUTED_MSAS --model_preset=$MODEL_PRESET --db_preset=$DB_PRESET --num_multimer_predictions_per_model=$NUM_PREDS_PER_MODEL --enable_gpu_relax=true --output_dir=$TCBG_DIR/outputs --docker_image_name=$DOCKER_NAME --models_to_relax=$MODELS_TO_RELAX --gpu_devices=$GPU_DEVICES --perform_MD_only=$PERFORM_MD_ONLY --use_amber=$USE_AMBER --use_dropout=$USE_DROPOUT --use_bfloat16=$USE_BFLOAT16 --use_fuse=$USE_FUSE --max_seq=$MAX_SEQ --max_extra_seq=$MAX_EXTRA_SEQ --num_ensemble=$NUM_ENSEMBLE --num_recycles=$NUM_RECYCLES --recycle_early_stop_tolerance=$RECYCLE_EARLY
 
 EOF
 
