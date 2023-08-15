@@ -292,8 +292,8 @@ if __name__ == '__main__':
       'max_template_date',
   ])
 
-  os.environ["FUNCTION_SIZE_ERROR_THRESHOLD"] = 400_000_000
-  os.environ["RAY_memory_usage_threshold"] = 1
-  os.environ["RAY_memory_monitor_refresh_ms"] = 0
+  os.environ["FUNCTION_SIZE_ERROR_THRESHOLD"] = "400000000"
+  os.environ["RAY_memory_usage_threshold"] = "1"
+  os.environ["RAY_memory_monitor_refresh_ms"] = "0"
 
   app.run(main)
