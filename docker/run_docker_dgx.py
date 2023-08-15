@@ -254,7 +254,7 @@ def main(argv):
       f'--use_bfloat16={FLAGS.use_bfloat16}',
       f'--use_dropout={FLAGS.use_dropout}'
   ])
-
+    
   client = docker.from_env()
   device_requests = [
       docker.types.DeviceRequest(driver='nvidia', capabilities=[['gpu']])
@@ -275,6 +275,9 @@ def main(argv):
           # would typically be too long to fit into GPU memory.
           'TF_FORCE_UNIFIED_MEMORY': '1',
           'XLA_PYTHON_CLIENT_MEM_FRACTION': '4.0',
+          'FUNCTION_SIZE_ERROR_THRESHOLD': '400000000',
+          'RAY_memory_usage_threshold': '1',
+          'RAY_memory_monitor_refresh_ms': '0'
       })
 
   # Add signal handler to ensure CTRL+C also stops the running container.
