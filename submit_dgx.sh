@@ -19,6 +19,7 @@ MAX_SEQ="${16:-512}"
 MAX_EXTRA_SEQ="${17:-5120}"
 NUM_ENSEMBLE="${18:-1}"
 NUM_RECYCLES="${19:-3}"
+RECYCLE_EARLY="${20:-0.5}"
 
 echo "$JOB_NAME is submitted for Alphafold structure prediction..."
 
@@ -42,6 +43,7 @@ if [ -z "$1" ]; then
   echo "MAX_EXTRA_SEQ is None by default, hence using original MSA/template scheme"
   echo "NUM_ENSEMBLE is 1 by default, CASP 14 standard"
   echo "NUM_RECYCLES is None by default, hence recycling 3 times"
+  echo "RECYCLE_EARLY is 0.5 by default"
   exit
 fi
 
@@ -55,7 +57,7 @@ DOCKER_NAME=hyunp2/alphafold_original
 qsub -q $MACHINE_NAME -N $JOB_NAME -j y -o ~/Jobs << EOF
 pushd $TCBG_DIR/alphafold
 
-$PYTHON $TCBG_DIR/alphafold/docker/run_docker.py --data_dir=$TCBG_DIR/data_hyun_official --fasta_paths=$FASTA_FILES --max_template_date=$MAX_TEMPLATE_DATE --use_precomputed_msas=$USE_PRECOMPUTED_MSAS --model_preset=$MODEL_PRESET --db_preset=$DB_PRESET --num_multimer_predictions_per_model=$NUM_PREDS_PER_MODEL --enable_gpu_relax=true --output_dir=$TCBG_DIR/outputs --docker_image_name=$DOCKER_NAME --models_to_relax=$MODELS_TO_RELAX --gpu_devices=$GPU_DEVICES --perform_MD_only=$PERFORM_MD_ONLY --use_amber=$USE_AMBER --use_dropout=$USE_DROPOUT --use_bfloat16=$USE_BFLOAT16 --use_fuse=$USE_FUSE --max_seq=$MAX_SEQ --max_extra_seq=$MAX_EXTRA_SEQ --num_ensemble=$NUM_ENSEMBLE --num_recycles=$NUM_RECYCLES
+$PYTHON $TCBG_DIR/alphafold/docker/run_docker.py --data_dir=$TCBG_DIR/data_hyun_official --fasta_paths=$FASTA_FILES --max_template_date=$MAX_TEMPLATE_DATE --use_precomputed_msas=$USE_PRECOMPUTED_MSAS --model_preset=$MODEL_PRESET --db_preset=$DB_PRESET --num_multimer_predictions_per_model=$NUM_PREDS_PER_MODEL --enable_gpu_relax=true --output_dir=$TCBG_DIR/outputs --docker_image_name=$DOCKER_NAME --models_to_relax=$MODELS_TO_RELAX --gpu_devices=$GPU_DEVICES --perform_MD_only=$PERFORM_MD_ONLY --use_amber=$USE_AMBER --use_dropout=$USE_DROPOUT --use_bfloat16=$USE_BFLOAT16 --use_fuse=$USE_FUSE --max_seq=$MAX_SEQ --max_extra_seq=$MAX_EXTRA_SEQ --num_ensemble=$NUM_ENSEMBLE --num_recycles=$NUM_RECYCLES --recycle_early_stop_tolerance=$RECYCLE_EARLY
 
 EOF
 
