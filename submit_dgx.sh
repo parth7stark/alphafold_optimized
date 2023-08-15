@@ -53,6 +53,7 @@ PYTHON=/Projects/ghaemi/Programs/Conda/envs/AF/bin/python3
 ALPHAFOLD_DIR=/Scr/hyunpark/Alphafold
 TCBG_DIR=/Scr/alpha_fold
 DOCKER_NAME=hyunp2/alphafold_original
+export FUNCTION_SIZE_ERROR_THRESHOLD=314600000
 
 qsub -q $MACHINE_NAME -N $JOB_NAME -j y -o ~/Jobs << EOF
 pushd $TCBG_DIR/alphafold
