@@ -106,7 +106,7 @@ flags.DEFINE_float('recycle_early_stop_tolerance', None, 'Only multimer has this
 flags.DEFINE_integer('num_ensemble', 1, '1 is a default while CASP is 8...')
 flags.DEFINE_integer('max_seq', None, 'Number of cluster centers?')
 flags.DEFINE_integer('max_extra_seq', None, 'Number of cluster centers?')
-flags.DEFINE_boolean('use_fuse', False, 'Global config for mono and multimer... ')
+# flags.DEFINE_boolean('use_fuse', False, 'Global config for mono and multimer... ')
 flags.DEFINE_boolean('use_bfloat16', True, 'Only for multimer')
 flags.DEFINE_boolean('use_dropout', False, 'Global config for mono and multimer...')
 
@@ -250,7 +250,7 @@ def main(argv):
       f'--num_ensemble={FLAGS.num_ensemble}',
       f'--max_seq={FLAGS.max_seq}',
       f'--max_extra_seq={FLAGS.max_extra_seq}',
-      f'--use_fuse={FLAGS.use_fuse}',
+      # f'--use_fuse={FLAGS.use_fuse}',
       f'--use_bfloat16={FLAGS.use_bfloat16}',
       f'--use_dropout={FLAGS.use_dropout}'
   ])
