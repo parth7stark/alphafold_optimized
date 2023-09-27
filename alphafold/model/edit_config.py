@@ -16,7 +16,7 @@ def load_models_config(
     model_order: Optional[List[int]] = None,
     max_seq: Optional[int] = None,
     max_extra_seq: Optional[int] = None,
-    use_fuse: bool = True,
+    # use_fuse: bool = True,
     use_bfloat16: bool = True,
     use_dropout: bool = False,
     save_all: bool = True,
@@ -58,12 +58,12 @@ def load_models_config(
     model_config.model.global_config.bfloat16 = use_bfloat16
     
     # set fuse options
-    model_config.model.embeddings_and_evoformer.evoformer.triangle_multiplication_incoming.fuse_projection_weights = use_fuse
-    model_config.model.embeddings_and_evoformer.evoformer.triangle_multiplication_outgoing.fuse_projection_weights = use_fuse
+    # model_config.model.embeddings_and_evoformer.evoformer.triangle_multiplication_incoming.fuse_projection_weights = use_fuse
+    # model_config.model.embeddings_and_evoformer.evoformer.triangle_multiplication_outgoing.fuse_projection_weights = use_fuse
     
     # if "multimer" in model_suffix or model_number in [1,2]:
-    model_config.model.embeddings_and_evoformer.template.template_pair_stack.triangle_multiplication_incoming.fuse_projection_weights = use_fuse
-    model_config.model.embeddings_and_evoformer.template.template_pair_stack.triangle_multiplication_outgoing.fuse_projection_weights = use_fuse
+    # model_config.model.embeddings_and_evoformer.template.template_pair_stack.triangle_multiplication_incoming.fuse_projection_weights = use_fuse
+    # model_config.model.embeddings_and_evoformer.template.template_pair_stack.triangle_multiplication_outgoing.fuse_projection_weights = use_fuse
                 
     # set number of sequences options
     if max_seq is not None:
