@@ -1,3 +1,4 @@
 1. [ColabFold's custom template] (https://github.com/sokrypton/ColabFold/blob/main/colabfold/batch.py).
 2. [AF30's delete template and choose identity based deletion] (https://github.com/hemahecodes/alphafold).
 3. [FoldDock's template only] (https://gitlab.com/ElofssonLab/FoldDock/-/blob/main/src/alphafold/alphafold/data/foldonly.py).
+4. [ColabFold's MMSeq2, Pairing, Turbo for Compilation] (https://github.com/sokrypton/ColabFold/blob/main/beta/AlphaFold2_advanced_old.ipynb)
