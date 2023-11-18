@@ -49,6 +49,8 @@ import functools, itertools
 from pprint import pformat
 import datetime
 
+import colabfold as cf
+import colabfold_alphafold as cf_af
 # Internal import (7716).
 
 logging.set_verbosity(logging.INFO)
@@ -423,19 +425,23 @@ def predict_structure(
     unrelaxed_pdb_path = os.path.join(output_dir, f'unrelaxed_{model_name}.pdb')
     with open(unrelaxed_pdb_path, 'w') as f:
       f.write(unrelaxed_pdbs[model_name])
-      
-    return timings, unrelaxed_proteins, unrelaxed_pdbs, ranking_confidences, label
+
+    num_res = len(feature_dict["residue_index"])
+    out = cf_af.parse_results(prediction_result, processed_feature_dict, FLAGS.num_recycles, 0, num_res) #-> dict
+    out = {key + f"_{model_name}": val for key, val in out.items()}
+                              
+    return timings, unrelaxed_proteins, unrelaxed_pdbs, ranking_confidences, out, label 
       
   outputs = [predict_one_structure.remote(model_index, model_name, model_runner) for model_index, (model_name, model_runner) in enumerate(model_runners.items())]    
   outputs = ray.get(outputs) #->List[tuple(dict)]
   #ray.shutdown()
   
   outputs_ = list(zip(*outputs)) #->[(dic0, dic0...), (dic1, dic1...), ...]
-  outputs = outputs_[:4] #-> Get the tuple of dicts
+  outputs = outputs_[:5] #-> Get the tuple of dicts
   label = outputs_[-1][0] #-> Get the tuple of labels then a label
-  assert len(outputs) == 4, "There should be only four tuples ready..."
+  assert len(outputs) == 5, "There should be only FIVE tuples ready..." #Colabfold modification: Nov-17-2023
 
-  timings, unrelaxed_proteins, unrelaxed_pdbs, ranking_confidences = [functools.reduce(collate_dictionary, out) for out in outputs] #->List[dict]
+  timings, unrelaxed_proteins, unrelaxed_pdbs, ranking_confidences, extra_results = [functools.reduce(collate_dictionary, out) for out in outputs] #->List[dict]
 
   #timings has to be saved to resume MD
   timings_output_path = os.path.join(output_dir, 'timings.json')
@@ -447,8 +453,13 @@ def predict_structure(
   with open(ranking_output_path, 'w') as f:
     f.write(json.dumps(
         {label: ranking_confidences}, indent=4))
+
+  #extra_results for contact map etc
+  extra_output_path = os.path.join(output_dir, 'extra_results.json')
+  with open(extra_output_path, 'w') as f:
+    f.write(json.dumps(extra_results, indent=4))
       
-  return timings, unrelaxed_proteins, unrelaxed_pdbs, ranking_confidences, label
+  return timings, unrelaxed_proteins, unrelaxed_pdbs, ranking_confidences, label #No need to return extra_results
   
 def structure_ranker( model_runners: Dict[str, model.RunModel],
                       random_seed: int,
