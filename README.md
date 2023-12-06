@@ -186,7 +186,7 @@ We'll walk through the script step by step to ensure you understand its function
 Submitting your job is a straightforward process. After preparing your submission script with the desired options, you can simply submit it using the *"sbatch"* command. It will provide you with a job ID:
 
 ```bash
-[parthpatel@dt-login01 job_script]$ sbatch monomer_template_job_script.sh
+[parthpatel@dt-login01 job_script]$ sbatch delta_monomer_template_job_script.sh
 Submitted batch job 2316719
 ```
 
