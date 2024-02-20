@@ -5,15 +5,15 @@
   <img src="imgs/6D6U.png" alt="alt text" width="150px" align="middle"/>
 </p>
 
-## Features
+## APACE Features
 1. CPU/GPU parallelization on HPC
 2. Conformational sampling as in ColabFold and others
 3. PDB conditioning as in AlphaFlow
 
-## Instructions to create and submit job
+## APACE Instructions to Create and Submit Jobs
 
 Below are the guidelines for creating the job script and submitting the job on the Delta supercomputer.
-### The Job Script
+### APACE The Job Script
 We'll walk through the script step by step to ensure you understand its functionality. The sample job script can be located in the GitHub repository under the name *"monomer template job script.sh"*
 1.	#!/bin/bash
    
@@ -186,7 +186,7 @@ We'll walk through the script step by step to ensure you understand its function
     ```
 
 
-### Submitting your job
+### APACE Submitting your job
 
 Submitting your job is a straightforward process. After preparing your submission script with the desired options, you can simply submit it using the *"sbatch"* command. It will provide you with a job ID:
 
