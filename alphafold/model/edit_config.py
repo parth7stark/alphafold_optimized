@@ -57,7 +57,10 @@ def load_models_config(
 
     # set bfloat options
     model_config.model.global_config.bfloat16 = use_bfloat16
-    
+
+    # set alphaflow pos conditioning
+    model_config.global_config.alphafold_cond_pdb = alphafold_cond_pdb
+
     # set fuse options
     # model_config.model.embeddings_and_evoformer.evoformer.triangle_multiplication_incoming.fuse_projection_weights = use_fuse
     # model_config.model.embeddings_and_evoformer.evoformer.triangle_multiplication_outgoing.fuse_projection_weights = use_fuse
