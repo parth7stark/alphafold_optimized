@@ -355,7 +355,7 @@ class AlphaFold(hk.Module):
     # https://github.com/bjing2016/alphaflow/blob/master/alphaflow/model/alphafold.py#L113 for conditioning on prev-output
     if emb_config.recycle_pos:
       if self.config.alphaflow_cond_pdb is not None:
-        prev['prev_pos'] = _load_test_protein(self.config.alphaflow_cond_pdb).atom_positions
+        prev['prev_pos'] = _load_test_protein(self.config.alphaflow_cond_pdb).atom_positions # (num_res, num_atoms, 3)
       else:
         prev['prev_pos'] = jnp.zeros(
             [num_residues, residue_constants.atom_type_num, 3])
