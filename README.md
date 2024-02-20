@@ -180,7 +180,8 @@ We'll walk through the script step by step to ensure you understand its function
     --use_gpu_relax=True \
     --logtostderr \
     --perform_MD_only=False \
-    --use_amber=True
+    --use_amber=True \
+    --alphaflow_cond_pdb=path/to/file.pdb
     
     echo "Job Completed"
     ```
