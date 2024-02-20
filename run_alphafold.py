@@ -165,6 +165,9 @@ flags.DEFINE_integer('max_extra_seq', None, 'Number of cluster centers?')
 flags.DEFINE_boolean('use_bfloat16', True, 'Only for multimer')
 flags.DEFINE_boolean('use_dropout', False, 'Global config for mono and multimer...')
 
+#AlphaFlow for position conditioning
+flags.DEFINE_string('alphaflow_cond_pdb', None, 'Whether to condition on PDB file')
+
 FLAGS = flags.FLAGS
 
 MAX_TEMPLATE_HITS = 20
@@ -703,7 +706,8 @@ def main(argv):
                                 use_bfloat16 = FLAGS.use_bfloat16,
                                 use_dropout = FLAGS.use_dropout,
                                 save_all = True,
-                                model_suffix = FLAGS.model_preset)
+                                model_suffix = FLAGS.model_preset,
+                                alphaflow_cond_pdb= FLAGS.alphaflow_cond_pdb)
 
     model_params = data.get_model_haiku_params(
         model_name=model_name, data_dir=FLAGS.data_dir)
