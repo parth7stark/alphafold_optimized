@@ -384,6 +384,7 @@ CONFIG = ml_collections.ConfigDict({
             'use_remat': False,
             'zero_init': True,
             'eval_dropout': False,
+            'alphaflow_cond_pdb': None
         },
         'heads': {
             'distogram': {
@@ -618,6 +619,7 @@ CONFIG_MULTIMER = ml_collections.ConfigDict({
             'use_remat': False,
             'zero_init': True,
             'eval_dropout': False,
+            'alphaflow_cond_pdb': None
         },
         'heads': {
             'distogram': {
