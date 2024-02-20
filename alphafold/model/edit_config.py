@@ -21,7 +21,7 @@ def load_models_config(
     use_dropout: bool = False,
     save_all: bool = True,
     model_suffix: str = "multimer",
-    alphafold_cond_pos: str = None
+    alphafold_cond_pdb: str = None
 ) -> List[Tuple[str, model.RunModel, haiku.Params]]:
     """We use only two actual models and swap the parameters to avoid recompiling.
 
