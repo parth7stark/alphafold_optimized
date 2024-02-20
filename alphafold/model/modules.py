@@ -225,7 +225,7 @@ class AlphaFoldIteration(hk.Module):
 
     total_loss = 0.
     ret = {}
-    ret['representations'] = representations
+    ret['representations'] = representations ###need to do something about this to perform AlphaFlow like conditioning other than positions!
 
     def loss(module, head_config, ret, name, filter_ret=True):
       if filter_ret:
@@ -2015,6 +2015,8 @@ class EmbeddingsAndEvoformer(hk.Module):
         # Crop away template rows such that they are not used in MaskedMsaHead.
         'msa': msa_activations[:num_sequences, :, :],
         'msa_first_row': msa_activations[0],
+        'prev_pair': prev_pair,
+        'prev_msa_first_row': prev_msa_first_row
     }
 
     return output
