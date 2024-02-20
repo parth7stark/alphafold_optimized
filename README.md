@@ -5,6 +5,11 @@
   <img src="imgs/6D6U.png" alt="alt text" width="150px" align="middle"/>
 </p>
 
+## Features
+1. CPU/GPU parallelization on HPC
+2. Conformational sampling as in ColabFold and others
+3. PDB conditioning as in AlphaFlow
+
 ## Instructions to create and submit job
 
 Below are the guidelines for creating the job script and submitting the job on the Delta supercomputer.
