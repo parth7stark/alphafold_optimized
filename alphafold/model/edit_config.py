@@ -20,7 +20,8 @@ def load_models_config(
     use_bfloat16: bool = True,
     use_dropout: bool = False,
     save_all: bool = True,
-    model_suffix: str = "multimer"
+    model_suffix: str = "multimer",
+    alphafold_cond_pos: str = None
 ) -> List[Tuple[str, model.RunModel, haiku.Params]]:
     """We use only two actual models and swap the parameters to avoid recompiling.
 
