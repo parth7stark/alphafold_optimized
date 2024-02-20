@@ -182,11 +182,16 @@ class AlphaFoldIteration(hk.Module):
         feats = slice_batch(i)
         representations_update = evoformer_module(
             feats, is_training)
-
+        
         new_representations = {}
         for k in current_representations:
+          ## do not update prev_pair and msa
+          # if not k in ["prev_pair", "prev_msa_first_row"]:
           new_representations[k] = (
-              current_representations[k] + representations_update[k])
+              current_representations[k] + representations_update[k]) #updating single/pair rep
+          # else:
+          #   new_representations[k] = (
+          #        representations_update[k]) #updating single/pair rep
         return i+1, new_representations
 
       if hk.running_init():
@@ -2015,7 +2020,7 @@ class EmbeddingsAndEvoformer(hk.Module):
         # Crop away template rows such that they are not used in MaskedMsaHead.
         'msa': msa_activations[:num_sequences, :, :],
         'msa_first_row': msa_activations[0],
-        'prev_pair': prev_pair,
+        'prev_pair': batch["prev_pair"],
         'prev_msa_first_row': prev_msa_first_row
     }
 
