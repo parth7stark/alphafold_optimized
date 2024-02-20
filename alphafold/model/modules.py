@@ -28,7 +28,7 @@ from alphafold.model import prng
 from alphafold.model import quat_affine
 from alphafold.model import utils
 from alphafold.relax.amber_minimize_test import _load_test_protein
-from alphafold.common.protein import _load_test_protein
+from alphafold.common.protein import from_pdb_string
 
 import haiku as hk
 import jax
