@@ -645,59 +645,61 @@ def prep_model_runner(opt=None, model_name="model_5", old_runner=None, params_lo
   else:
     return old_runner
   
+
+def do_subsample_msa(F, random_seed=0):
+  '''subsample msa to avoid running out of memory'''
+  N = len(F["msa"])
+  L = len(F["residue_index"])
+  N_ = int(3E7/L)
+  if N > N_:
+    if verbose:
+      print(f"whhhaaa... too many sequences ({N}) subsampling to {N_}")
+    np.random.seed(random_seed)
+    idx = np.append(0,np.random.permutation(np.arange(1,N)))[:N_]
+    F_ = {}
+    F_["msa"] = F["msa"][idx]
+    F_["deletion_matrix_int"] = F["deletion_matrix_int"][idx]
+    F_["num_alignments"] = np.full_like(F["num_alignments"],N_)
+    for k in F.keys():
+      if k not in F_: F_[k] = F[k]      
+    return F_
+  else:
+    return F
+
+def parse_results(prediction_result, processed_feature_dict, r, t, num_res):
+  '''parse results and convert to numpy arrays'''
+  
+  to_np = lambda a: np.asarray(a)
+  def class_to_np(c):
+    class dict2obj():
+      def __init__(self, d):
+        for k,v in d.items(): setattr(self, k, to_np(v))
+    return dict2obj(c.__dict__)
+
+  dist_bins = jax.numpy.append(0,prediction_result["distogram"]["bin_edges"])
+  dist_logits = prediction_result["distogram"]["logits"][:num_res,:][:,:num_res]
+  dist_mtx = dist_bins[dist_logits.argmax(-1)]
+  contact_mtx = jax.nn.softmax(dist_logits)[:,:,dist_bins < 8].sum(-1)
+
+  b_factors = prediction_result['plddt'][:,None] * prediction_result['structure_module']['final_atom_mask']
+  p = protein.from_prediction(processed_feature_dict, prediction_result, b_factors=b_factors)  
+  plddt = prediction_result['plddt'][:num_res]
+  out = {"unrelaxed_protein": class_to_np(p),
+          "plddt": to_np(plddt),
+          "pLDDT": to_np(plddt.mean()),
+          "dists": to_np(dist_mtx),
+          "adj": to_np(contact_mtx),
+          "recycles":to_np(r),
+          "tol":to_np(t)}
+  if "ptm" in prediction_result:
+    out["pae"] = to_np(prediction_result['predicted_aligned_error'][:num_res,:][:,:num_res])
+    out["pTMscore"] = to_np(prediction_result['ptm'])      
+  return out
+
+
 def run_alphafold(feature_dict, opt=None, runner=None, num_models=5, num_samples=1, subsample_msa=True,
                   pad_feats=False, rank_by="pLDDT", show_images=True, params_loc='./alphafold/data', verbose=True):
   
-  def do_subsample_msa(F, random_seed=0):
-    '''subsample msa to avoid running out of memory'''
-    N = len(F["msa"])
-    L = len(F["residue_index"])
-    N_ = int(3E7/L)
-    if N > N_:
-      if verbose:
-        print(f"whhhaaa... too many sequences ({N}) subsampling to {N_}")
-      np.random.seed(random_seed)
-      idx = np.append(0,np.random.permutation(np.arange(1,N)))[:N_]
-      F_ = {}
-      F_["msa"] = F["msa"][idx]
-      F_["deletion_matrix_int"] = F["deletion_matrix_int"][idx]
-      F_["num_alignments"] = np.full_like(F["num_alignments"],N_)
-      for k in F.keys():
-        if k not in F_: F_[k] = F[k]      
-      return F_
-    else:
-      return F
-
-  def parse_results(prediction_result, processed_feature_dict, r, t, num_res):
-    '''parse results and convert to numpy arrays'''
-    
-    to_np = lambda a: np.asarray(a)
-    def class_to_np(c):
-      class dict2obj():
-        def __init__(self, d):
-          for k,v in d.items(): setattr(self, k, to_np(v))
-      return dict2obj(c.__dict__)
-
-    dist_bins = jax.numpy.append(0,prediction_result["distogram"]["bin_edges"])
-    dist_logits = prediction_result["distogram"]["logits"][:num_res,:][:,:num_res]
-    dist_mtx = dist_bins[dist_logits.argmax(-1)]
-    contact_mtx = jax.nn.softmax(dist_logits)[:,:,dist_bins < 8].sum(-1)
-
-    b_factors = prediction_result['plddt'][:,None] * prediction_result['structure_module']['final_atom_mask']
-    p = protein.from_prediction(processed_feature_dict, prediction_result, b_factors=b_factors)  
-    plddt = prediction_result['plddt'][:num_res]
-    out = {"unrelaxed_protein": class_to_np(p),
-           "plddt": to_np(plddt),
-           "pLDDT": to_np(plddt.mean()),
-           "dists": to_np(dist_mtx),
-           "adj": to_np(contact_mtx),
-           "recycles":to_np(r),
-           "tol":to_np(t)}
-    if "ptm" in prediction_result:
-      out["pae"] = to_np(prediction_result['predicted_aligned_error'][:num_res,:][:,:num_res])
-      out["pTMscore"] = to_np(prediction_result['ptm'])      
-    return out
-
   num_res = len(feature_dict["residue_index"])
 
   # if [opt]ions not defined

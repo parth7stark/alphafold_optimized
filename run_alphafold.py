@@ -15,6 +15,7 @@
 """Full AlphaFold protein structure prediction script."""
 import enum
 import json
+import yaml
 import os
 import pathlib
 import pickle
@@ -353,7 +354,8 @@ def predict_structure(
   def predict_one_structure(
                             model_index :int,
                             model_name: str, 
-                            model_runner: model.RunModel):
+                            model_runner: model.RunModel,
+                            num_recycles):
     logging.info('Running model %s on %s', model_name, fasta_name)
     t_0 = time.time()
     model_random_seed = model_index + random_seed * num_models
@@ -430,12 +432,14 @@ def predict_structure(
       f.write(unrelaxed_pdbs[model_name])
 
     num_res = len(feature_dict["residue_index"])
-    out = cf_af.parse_results(prediction_result, processed_feature_dict, FLAGS.num_recycles, 0, num_res) #-> dict
+    # out = cf_af.parse_results(prediction_result, processed_feature_dict, FLAGS.num_recycles, 0, num_res) #-> dict
+    # Pass non serialization object as argument
+    out = cf_af.parse_results(prediction_result, processed_feature_dict, num_recycles, 0, num_res) #-> dict
     out = {key + f"_{model_name}": val for key, val in out.items()}
                               
     return timings, unrelaxed_proteins, unrelaxed_pdbs, ranking_confidences, out, label 
       
-  outputs = [predict_one_structure.remote(model_index, model_name, model_runner) for model_index, (model_name, model_runner) in enumerate(model_runners.items())]    
+  outputs = [predict_one_structure.remote(model_index, model_name, model_runner, FLAGS.num_recycles) for model_index, (model_name, model_runner) in enumerate(model_runners.items())]    
   outputs = ray.get(outputs) #->List[tuple(dict)]
   #ray.shutdown()
   
@@ -457,10 +461,11 @@ def predict_structure(
     f.write(json.dumps(
         {label: ranking_confidences}, indent=4))
 
-  #extra_results for contact map etc
-  extra_output_path = os.path.join(output_dir, 'extra_results.json')
+  logging.info('\n\n extra results dict: %s', extra_results)
+  extra_output_path = os.path.join(output_dir, 'extra_results.yaml')
   with open(extra_output_path, 'w') as f:
-    f.write(json.dumps(extra_results, indent=4))
+    yaml.dump(extra_results, f, default_flow_style=False)
+
       
   return timings, unrelaxed_proteins, unrelaxed_pdbs, ranking_confidences, label #No need to return extra_results
   
@@ -707,7 +712,7 @@ def main(argv):
                                 use_dropout = FLAGS.use_dropout,
                                 save_all = True,
                                 model_suffix = FLAGS.model_preset,
-                                alphaflow_cond_pdb= FLAGS.alphaflow_cond_pdb)
+                                alphafold_cond_pdb= FLAGS.alphaflow_cond_pdb)
 
     model_params = data.get_model_haiku_params(
         model_name=model_name, data_dir=FLAGS.data_dir)
